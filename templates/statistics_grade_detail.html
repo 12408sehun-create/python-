@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}{{ score_range }}成绩详情 - 数据统计{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4><i class="bi bi-bar-chart"></i> {{ score_range }} 分成绩详情</h4>
+            <a href="{{ url_for('statistics') }}{% if major_filter or grade_start_date or grade_end_date %}?{% if major_filter %}major={{ major_filter }}{% endif %}{% if grade_start_date %}&grade_start_date={{ grade_start_date }}{% endif %}{% if grade_end_date %}&grade_end_date={{ grade_end_date }}{% endif %}{% endif %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> 返回统计页面
+            </a>
+        </div>
+        
+        <div class="row">
+            <!-- 按班级统计 -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">按班级统计</h5>
+                        {% if class_stats %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>班级</th>
+                                        <th>人数</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for stat in class_stats %}
+                                    <tr>
+                                        <td>{{ stat.class_name }}</td>
+                                        <td><span class="badge bg-primary">{{ stat.count }}</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-muted text-center py-4">暂无数据</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 按年级统计 -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">按年级统计</h5>
+                        {% if grade_stats %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>年级</th>
+                                        <th>人数</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for stat in grade_stats %}
+                                    <tr>
+                                        <td>{{ stat.grade_year }}级</td>
+                                        <td><span class="badge bg-primary">{{ stat.count }}</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-muted text-center py-4">暂无数据</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 学生成绩列表 -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5 class="card-title">学生成绩列表</h5>
+                {% if students %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>学号</th>
+                                <th>姓名</th>
+                                <th>班级</th>
+                                <th>年级</th>
+                                <th>成绩</th>
+                                <th>考试日期</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                            <tr>
+                                <td>{{ student.student_id }}</td>
+                                <td>{{ student.name }}</td>
+                                <td>{{ student.class_name }}</td>
+                                <td>{{ student.grade_year }}级</td>
+                                <td><strong>{{ student.score }}</strong></td>
+                                <td>{{ student.exam_date or '-' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-4">暂无数据</p>
+                {% endif %}
+                
+                <!-- 分页 -->
+                {% if total_pages >= 1 %}
+                <nav aria-label="成绩统计分页">
+                    <ul class="pagination justify-content-center mt-3">
+                        {% if page > 1 %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('statistics_grade_detail', range=score_range, page=page-1, grade_start_date=grade_start_date, grade_end_date=grade_end_date, major=major_filter) }}">上一页</a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for p in range(1, total_pages + 1) %}
+                            {% if p >= page - 2 and p <= page + 2 %}
+                            <li class="page-item {% if p == page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('statistics_grade_detail', range=score_range, page=p, grade_start_date=grade_start_date, grade_end_date=grade_end_date, major=major_filter) }}">{{ p }}</a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page < total_pages %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('statistics_grade_detail', range=score_range, page=page+1, grade_start_date=grade_start_date, grade_end_date=grade_end_date, major=major_filter) }}">下一页</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                <div class="text-center text-muted">
+                    <small>共 {{ total }} 条记录，第 {{ page }}/{{ total_pages }} 页</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

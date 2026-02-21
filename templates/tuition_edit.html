@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}编辑学费信息 - 大学生管理系统{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <h4 class="mb-4"><i class="bi bi-pencil"></i> 编辑学费信息</h4>
+        
+        <form method="post">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">学号</label>
+                    <input type="text" class="form-control" value="{{ student.student_id }}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">姓名</label>
+                    <input type="text" class="form-control" value="{{ student.name }}" readonly>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">专业</label>
+                    <input type="text" class="form-control" value="{{ student.major }}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">班级</label>
+                    <input type="text" class="form-control" value="{{ student.class_name }}" readonly>
+                </div>
+            </div>
+            
+            <hr>
+            <h5 class="mb-3">学费信息</h5>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="enrollment_date" class="form-label">入学日期 <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" id="enrollment_date" name="enrollment_date" value="{{ student.enrollment_date or '' }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="months_paid" class="form-label">已缴月数 <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" id="months_paid" name="months_paid" min="0" value="{{ student.months_paid or 0 }}" required>
+                    <small class="text-muted">0=未缴，1-11=部分交，12及以上=已缴</small>
+                </div>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> 保存修改
+                </button>
+                <a href="{{ url_for('tuition') }}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> 取消
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}{{ cls.class_name }} - 班级详情 - 大学生管理系统{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4><i class="bi bi-diagram-3"></i> {{ cls.class_name }} - 班级详情</h4>
+            <div>
+                <a href="{{ url_for('class_add_student', class_name=cls.class_name) }}" class="btn btn-primary">
+                    <i class="bi bi-person-plus"></i> 添加学生
+                </a>
+                <a href="{{ url_for('classes') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> 返回班级列表
+                </a>
+            </div>
+        </div>
+        
+        <!-- 班级信息 -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6 class="text-muted">专业</h6>
+                        <h5>{{ cls.major or '-' }}</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6 class="text-muted">年级</h6>
+                        <h5>{{ cls.grade_year or '-' }}</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6 class="text-muted">学生人数</h6>
+                        <h5><span class="badge bg-primary">{{ student_count }}</span></h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 学生列表 -->
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>学号</th>
+                        <th>姓名</th>
+                        <th>性别</th>
+                        <th>年龄</th>
+                        <th>专业</th>
+                        <th>联系电话</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if students %}
+                        {% for student in students %}
+                        <tr {% if highlighted_class_student == student.id %}class="table-warning"{% endif %}>
+                            <td>
+                                {% if highlighted_class_student == student.id %}<i class="bi bi-star-fill text-warning me-1"></i>{% endif %}
+                                {{ student.student_id }}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('view_student', id=student.id) }}" class="text-decoration-none">
+                                    {{ student.name }}
+                                </a>
+                            </td>
+                            <td>
+                                {% if student.gender == '男' %}
+                                <span class="badge bg-primary">{{ student.gender }}</span>
+                                {% else %}
+                                <span class="badge bg-danger">{{ student.gender }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ student.age }}</td>
+                            <td>{{ student.major }}</td>
+                            <td>{{ student.phone|mask_phone if student.phone else '-' }}</td>
+                            <td>
+                                <!-- 编辑按钮已隐藏 -->
+                                <!--
+                                <a href="{{ url_for('class_edit_student', class_name=cls.class_name, student_id=student.id) }}" class="btn btn-sm btn-warning" title="编辑">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                -->
+                                <form action="{{ url_for('class_delete_student', class_name=cls.class_name, student_id=student.id) }}" method="post" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="删除" onclick="return confirm('确定要删除该学生吗？删除后学生将变为未分班状态，需要重新分配班级。')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                            <p class="mt-2">暂无学生数据</p>
+                            <a href="{{ url_for('class_add_student', class_name=cls.class_name) }}" class="btn btn-primary btn-sm">添加第一个学生</a>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if total_pages >= 1 %}
+        <nav aria-label="班级学生分页">
+            <ul class="pagination justify-content-center mt-3">
+                {% if page > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('class_detail', class_name=cls.class_name, page=page-1) }}">上一页</a>
+                </li>
+                {% endif %}
+                
+                {% for p in range(1, total_pages + 1) %}
+                    {% if p >= page - 2 and p <= page + 2 %}
+                    <li class="page-item {% if p == page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('class_detail', class_name=cls.class_name, page=p) }}">{{ p }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page < total_pages %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('class_detail', class_name=cls.class_name, page=page+1) }}">下一页</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        <div class="text-center text-muted">
+            <small>共 {{ total }} 条记录，第 {{ page }}/{{ total_pages }} 页</small>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}考勤管理 - 大学生管理系统{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4><i class="bi bi-calendar-check"></i> 考勤管理</h4>
+            <a href="{{ url_for('add_attendance') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> 添加考勤
+            </a>
+        </div>
+        
+        <!-- 筛选 -->
+        <form method="get" class="row g-3 mb-4">
+            <div class="col-md-2">
+                <select name="major" class="form-select">
+                    <option value="">全部专业</option>
+                    <option value="中文系" {% if major_filter == '中文系' %}selected{% endif %}>中文系</option>
+                    <option value="英文系" {% if major_filter == '英文系' %}selected{% endif %}>英文系</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="text" name="student" class="form-control" placeholder="搜索学生..." value="{{ student_filter }}">
+            </div>
+            <div class="col-md-2">
+                <select name="class" class="form-select">
+                    <option value="">全部班级</option>
+                    <option value="未分班" {% if class_filter == '未分班' %}selected{% endif %}>未分班</option>
+                    {% for cls in all_classes %}
+                    <option value="{{ cls.class_name }}" {% if class_filter == cls.class_name %}selected{% endif %}>
+                        {{ cls.class_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="status" class="form-select">
+                    <option value="">全部状态</option>
+                    <option value="出勤" {% if status_filter == '出勤' %}selected{% endif %}>出勤</option>
+                    <option value="缺勤" {% if status_filter == '缺勤' %}selected{% endif %}>缺勤</option>
+                    <option value="迟到" {% if status_filter == '迟到' %}selected{% endif %}>迟到</option>
+                    <option value="请假" {% if status_filter == '请假' %}selected{% endif %}>请假</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> 搜索
+                </button>
+            </div>
+        </form>
+        
+        <!-- 考勤列表 -->
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>学号</th>
+                        <th>姓名</th>
+                        <th>班级</th>
+                        <th>课程</th>
+                        <th>日期</th>
+                        <th>状态</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if has_filter and records %}
+                        {% for record in records %}
+                        <tr style="cursor: pointer;" onclick="window.location.href='{{ url_for('attendance_detail', student_id=record.student_id) }}'" {% if highlighted_attendance and record.student_id in highlighted_attendance.split(',') %}class="table-warning"{% endif %}>
+                            <td>
+                                {% if highlighted_attendance and record.student_id in highlighted_attendance.split(',') %}<i class="bi bi-star-fill text-warning me-1"></i>{% endif %}
+                                {{ record.student_id }}
+                            </td>
+                            <td>{{ record.student_name }}</td>
+                            <td>{{ record.class_name }}</td>
+                            <td>{{ record.course_name if record.course_name else '-' }}</td>
+                            <td>{{ record.date }}</td>
+                            <td>
+                                {% if record.status == '出勤' %}
+                                <span class="status-present"><i class="bi bi-check-circle"></i> 出勤</span>
+                                {% elif record.status == '缺勤' %}
+                                <span class="status-absent"><i class="bi bi-x-circle"></i> 缺勤</span>
+                                {% elif record.status == '迟到' %}
+                                <span class="status-late"><i class="bi bi-clock"></i> 迟到</span>
+                                {% elif record.status == '请假' %}
+                                <span class="status-leave"><i class="bi bi-calendar-minus"></i> 请假</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                            <p class="mt-2">暂无考勤数据</p>
+                            <a href="{{ url_for('add_attendance') }}" class="btn btn-primary btn-sm">添加第一条考勤记录</a>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 分页 -->
+        {% if total_pages >= 1 %}
+        <nav aria-label="考勤分页">
+            <ul class="pagination justify-content-center">
+                {% if page > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('attendance', page=page-1, student=student_filter, class=class_filter, status=status_filter, major=major_filter, date=date_filter) }}">上一页</a>
+                </li>
+                {% endif %}
+                
+                {% for p in range(1, total_pages + 1) %}
+                    {% if p >= page - 2 and p <= page + 2 %}
+                    <li class="page-item {% if p == page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('attendance', page=p, student=student_filter, class=class_filter, status=status_filter, major=major_filter, date=date_filter) }}">{{ p }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page < total_pages %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('attendance', page=page+1, student=student_filter, class=class_filter, status=status_filter, major=major_filter, date=date_filter) }}">下一页</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        <div class="text-center text-muted">
+            <small>共 {{ total }} 条记录，第 {{ page }}/{{ total_pages }} 页</small>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

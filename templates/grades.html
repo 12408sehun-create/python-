@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}成绩管理 - 大学生管理系统{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4><i class="bi bi-graph-up"></i> 成绩管理</h4>
+            <a href="{{ url_for('add_grade') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> 添加成绩
+            </a>
+        </div>
+        
+        <!-- 筛选 -->
+        <form method="get" class="row g-3 mb-4">
+            <div class="col-md-2">
+                <select name="major" class="form-select">
+                    <option value="">全部专业</option>
+                    <option value="中文系" {% if major_filter == '中文系' %}selected{% endif %}>中文系</option>
+                    <option value="英文系" {% if major_filter == '英文系' %}selected{% endif %}>英文系</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="text" name="student" class="form-control" placeholder="搜索学生..." value="{{ student_filter }}">
+            </div>
+            <div class="col-md-2">
+                <select name="class" class="form-select">
+                    <option value="">全部班级</option>
+                    <option value="未分班" {% if class_filter == '未分班' %}selected{% endif %}>未分班</option>
+                    {% for cls in all_classes %}
+                    <option value="{{ cls.class_name }}" {% if class_filter == cls.class_name %}selected{% endif %}>
+                        {{ cls.class_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="semester" class="form-select">
+                    <option value="">全部学期</option>
+                    <option value="2024-2025-1" {% if semester_filter == '2024-2025-1' %}selected{% endif %}>2024-2025-1</option>
+                    <option value="2024-2025-2" {% if semester_filter == '2024-2025-2' %}selected{% endif %}>2024-2025-2</option>
+                    <option value="2023-2024-1" {% if semester_filter == '2023-2024-1' %}selected{% endif %}>2023-2024-1</option>
+                    <option value="2023-2024-2" {% if semester_filter == '2023-2024-2' %}selected{% endif %}>2023-2024-2</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> 搜索
+                </button>
+            </div>
+        </form>
+        
+        <!-- 成绩列表 -->
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>学号</th>
+                        <th>姓名</th>
+                        <th>班级</th>
+                        <th>课程</th>
+                        <th>学期</th>
+                        <th>成绩</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if has_filter and grades %}
+                        {% for grade in grades %}
+                        <tr style="cursor: pointer;" onclick="window.location.href='{{ url_for('grade_detail', student_id=grade.student_id) }}'" {% if highlighted_grade and grade.student_id in highlighted_grade.split(',') %}class="table-warning"{% endif %}>
+                            <td>
+                                {% if highlighted_grade and grade.student_id in highlighted_grade.split(',') %}<i class="bi bi-star-fill text-warning me-1"></i>{% endif %}
+                                {{ grade.student_id }}
+                            </td>
+                            <td>{{ grade.student_name }}</td>
+                            <td>{{ grade.class_name }}</td>
+                            <td>{{ grade.course_name if grade.course_name else '-' }}</td>
+                            <td>{{ grade.semester }}</td>
+                            <td>{{ grade.score if grade.score else '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                            <p class="mt-2">暂无成绩数据</p>
+                            <a href="{{ url_for('add_grade') }}" class="btn btn-primary btn-sm">添加第一条成绩</a>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 分页 -->
+        {% if total_pages >= 1 %}
+        <nav aria-label="成绩分页">
+            <ul class="pagination justify-content-center">
+                {% if page > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('grades', page=page-1, student=student_filter, class=class_filter, semester=semester_filter, major=major_filter, exam_date=exam_date_filter) }}">上一页</a>
+                </li>
+                {% endif %}
+                
+                {% for p in range(1, total_pages + 1) %}
+                    {% if p >= page - 2 and p <= page + 2 %}
+                    <li class="page-item {% if p == page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('grades', page=p, student=student_filter, class=class_filter, semester=semester_filter, major=major_filter, exam_date=exam_date_filter) }}">{{ p }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page < total_pages %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('grades', page=page+1, student=student_filter, class=class_filter, semester=semester_filter, major=major_filter, exam_date=exam_date_filter) }}">下一页</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        <div class="text-center text-muted">
+            <small>共 {{ total }} 条记录，第 {{ page }}/{{ total_pages }} 页</small>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}添加班级 - 大学生管理系统{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <h4 class="mb-4"><i class="bi bi-diagram-3"></i> 添加班级</h4>
+        
+        <form method="post">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="class_name" class="form-label">班级名称 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="class_name" name="class_name" placeholder="如：中文22(1)班" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="major" class="form-label">专业</label>
+                    <select class="form-select" id="major" name="major">
+                        <option value="">请选择专业</option>
+                        {% for major in majors %}
+                        <option value="{{ major }}">{{ major }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="grade_year" class="form-label">年级</label>
+                <select class="form-select" id="grade_year" name="grade_year">
+                    <option value="">请选择年级</option>
+                    <option value="2024">2024级</option>
+                    <option value="2023">2023级</option>
+                    <option value="2022">2022级</option>
+                    <option value="2021">2021级</option>
+                </select>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> 保存
+                </button>
+                <a href="{{ url_for('classes') }}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> 取消
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

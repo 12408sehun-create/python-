@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}学费管理 - 大学生管理系统{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <h4 class="mb-4"><i class="bi bi-currency-dollar"></i> 学费管理</h4>
+        
+        <!-- 筛选功能 -->
+        <form method="get" class="mb-4">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <select class="form-select" name="class">
+                        <option value="">全部班级</option>
+                        <option value="未分班" {% if class_filter == '未分班' %}selected{% endif %}>未分班</option>
+                        {% for cls in all_classes %}
+                        <option value="{{ cls.class_name }}" {% if class_filter == cls.class_name %}selected{% endif %}>{{ cls.class_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" name="major">
+                        <option value="">全部专业</option>
+                        {% for major in majors %}
+                        <option value="{{ major }}" {% if major_filter == major %}selected{% endif %}>{{ major }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" name="status">
+                        <option value="">全部状态</option>
+                        <option value="未缴" {% if status_filter == '未缴' %}selected{% endif %}>未缴</option>
+                        <option value="部分交" {% if status_filter == '部分交' %}selected{% endif %}>部分交</option>
+                        <option value="已缴" {% if status_filter == '已缴' %}selected{% endif %}>已缴</option>
+                        <option value="即将到期" {% if status_filter == '即将到期' %}selected{% endif %}>即将到期</option>
+                        <option value="已毕业" {% if status_filter == '已毕业' %}selected{% endif %}>已毕业</option>
+                        <option value="离校" {% if status_filter == '离校' %}selected{% endif %}>离校</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-funnel"></i> 筛选
+                    </button>
+                </div>
+            </div>
+        </form>
+        
+        {% if student_data %}
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th>学号</th>
+                        <th>姓名</th>
+                        <th>专业</th>
+                        <th>班级</th>
+                        <th>入学日期</th>
+                        <th>已缴月数</th>
+                        <th>到期日期</th>
+                        <th>缴费状态</th>
+                        <th>距到期天数</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in student_data %}
+                    <tr {% if item.is_expiring_soon or highlighted_tuition == item.student.id %}class="table-warning"{% endif %}>
+                        <td>
+                            {% if highlighted_tuition == item.student.id %}<i class="bi bi-star-fill text-warning me-1"></i>{% endif %}
+                            {{ item.student.student_id }}
+                        </td>
+                        <td>{{ item.student.name }}</td>
+                        <td>{{ item.student.major }}</td>
+                        <td>{{ item.student.class_name }}</td>
+                        <td>{{ item.enrollment_date }}</td>
+                        <td>{{ item.months_paid }}个月</td>
+                        <td>{{ item.expiry_date }}</td>
+                        <td>
+                            {% if item.payment_status == '已缴' %}
+                            <span class="badge bg-success">{{ item.payment_status }}</span>
+                            {% elif item.payment_status == '部分交' %}
+                            <span class="badge bg-warning text-dark">{{ item.payment_status }}</span>
+                            {% elif item.payment_status == '已毕业' %}
+                            <span class="badge bg-secondary">{{ item.payment_status }}</span>
+                            {% elif item.payment_status == '离校' %}
+                            <span class="badge bg-dark">{{ item.payment_status }}</span>
+                            {% else %}
+                            <span class="badge bg-danger">{{ item.payment_status }}</span>
+                            {% endif %}
+                        </td>
+                        <td {% if item.is_expiring_soon %}class="fw-bold text-danger"{% endif %}>
+                            {% if item.graduation_status == '已毕业' or item.graduation_status == '离校' %}
+                            <span class="text-muted">-</span>
+                            {% elif item.days_until_expiry >= 0 %}
+                            {{ item.days_until_expiry }}天
+                            {% else %}
+                            已过期{{ -item.days_until_expiry }}天
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('tuition_edit', id=item.student.id) }}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-pencil"></i> 编辑
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if status_filter or class_filter or major_filter %}
+        <div class="mt-3">
+            <a href="{{ url_for('tuition') }}" class="btn btn-secondary">
+                <i class="bi bi-x-circle"></i> 清除筛选
+            </a>
+        </div>
+        {% endif %}
+        
+        <!-- 分页 -->
+        {% if total_pages >= 1 %}
+        <nav aria-label="学费管理分页">
+            <ul class="pagination justify-content-center mt-3">
+                {% if page > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('tuition', page=page-1, class=class_filter, major=major_filter, status=status_filter) }}">上一页</a>
+                </li>
+                {% endif %}
+                
+                {% for p in range(1, total_pages + 1) %}
+                    {% if p >= page - 2 and p <= page + 2 %}
+                    <li class="page-item {% if p == page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('tuition', page=p, class=class_filter, major=major_filter, status=status_filter) }}">{{ p }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page < total_pages %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('tuition', page=page+1, class=class_filter, major=major_filter, status=status_filter) }}">下一页</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        <div class="text-center text-muted">
+            <small>共 {{ total }} 条记录，第 {{ page }}/{{ total_pages }} 页</small>
+        </div>
+        {% endif %}
+        
+        {% else %}
+        <div class="alert alert-info">
+            {% if status_filter or class_filter or major_filter %}
+            <i class="bi bi-info-circle"></i> 筛选结果为空，请调整筛选条件
+            {% else %}
+            <i class="bi bi-info-circle"></i> 暂无学生学费数据，请先添加学生并设置入学日期
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

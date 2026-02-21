@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}编辑考勤 - 大学生管理系统{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4><i class="bi bi-calendar-check"></i> 编辑考勤</h4>
+            <a href="{{ url_for('attendance_detail', student_id=student_id) }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> 返回
+            </a>
+        </div>
+        
+        <form method="post">
+            <div class="mb-3">
+                <label class="form-label">学号</label>
+                <input type="text" class="form-control" value="{{ attendance.student_id }}" readonly>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">日期</label>
+                <input type="date" name="date" class="form-control" value="{{ attendance.date }}" required>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">状态</label>
+                <select name="status" class="form-select" required>
+                    <option value="出勤" {% if attendance.status == '出勤' %}selected{% endif %}>出勤</option>
+                    <option value="缺勤" {% if attendance.status == '缺勤' %}selected{% endif %}>缺勤</option>
+                    <option value="迟到" {% if attendance.status == '迟到' %}selected{% endif %}>迟到</option>
+                    <option value="请假" {% if attendance.status == '请假' %}selected{% endif %}>请假</option>
+                </select>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">备注</label>
+                <textarea name="remarks" class="form-control" rows="3">{{ attendance.remarks or '' }}</textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-circle"></i> 保存
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

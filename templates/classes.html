@@ -1,0 +1,346 @@
+{% extends "base.html" %}
+
+{% block title %}班级管理 - 大学生管理系统{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4><i class="bi bi-diagram-3"></i> 班级管理</h4>
+            <a href="{{ url_for('add_class') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> 添加班级
+            </a>
+        </div>
+        
+        <!-- 标签页导航 -->
+        <ul class="nav nav-tabs mb-4" id="classTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link {% if graduation_status != 'graduated' %}active{% endif %}" id="current-tab" data-bs-toggle="tab" data-bs-target="#current" type="button" role="tab" aria-controls="current" aria-selected="true">
+                    在校班级 <span class="badge bg-primary">{{ current_classes_count }}</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link {% if graduation_status == 'graduated' %}active{% endif %}" id="graduated-tab" data-bs-toggle="tab" data-bs-target="#graduated" type="button" role="tab" aria-controls="graduated" aria-selected="false">
+                    已毕业班级 <span class="badge bg-secondary">{{ graduated_classes_count }}</span>
+                </button>
+            </li>
+        </ul>
+        
+        <!-- 标签页内容 -->
+        <div class="tab-content" id="classTabsContent">
+            <!-- 在校班级标签页 -->
+            <div class="tab-pane fade {% if graduation_status != 'graduated' %}show active{% endif %}" id="current" role="tabpanel" aria-labelledby="current-tab">
+                <!-- 搜索/筛选 -->
+                <form method="get" class="row g-3 mb-4">
+                    <input type="hidden" name="graduation_status" value="current">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <input type="text" name="search" class="form-control" placeholder="搜索班级名称..." value="{{ search_query }}">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <select name="major" class="form-select" onchange="this.form.submit()">
+                            <option value="">全部专业</option>
+                            {% for major in majors %}
+                            <option value="{{ major }}" {% if major_filter == major %}selected{% endif %}>{{ major }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>班级名称</th>
+                                <th>专业</th>
+                                <th>年级</th>
+                                <th>学生人数</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if current_classes %}
+                                {% for cls in current_classes %}
+                                <tr style="cursor: pointer;" onclick="window.location.href='{{ url_for('class_detail', class_name=cls.class_name) }}'" {% if highlighted_class and cls.class_name == highlighted_class %}class="table-warning"{% endif %}>
+                                    <td>
+                                        {% if highlighted_class and cls.class_name == highlighted_class %}<i class="bi bi-star-fill text-warning me-1"></i>{% endif %}
+                                        {{ cls.class_name }}
+                                    </td>
+                                    <td>{{ cls.major or '-' }}</td>
+                                    <td>{{ cls.grade_year or '-' }}</td>
+                                    <td><span class="badge bg-primary">{{ cls.student_count or 0 }}</span></td>
+                                    <td onclick="event.stopPropagation();">
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button type="button" class="btn btn-outline-success me-2" onclick="graduateClass('{{ cls.class_name }}')" title="设置为毕业状态">
+                                                <i class="bi bi-mortarboard"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#editClassModal" onclick="loadClassData({{ cls.id }}, '{{ cls.class_name }}', '{{ cls.major or '' }}', '{{ cls.grade_year or '' }}')">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger" onclick="deleteClass({{ cls.id }}, '{{ cls.class_name }}')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                                    <p class="mt-2">暂无在校班级数据</p>
+                                    <a href="{{ url_for('add_class') }}" class="btn btn-primary btn-sm">添加第一个班级</a>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 分页 - 在校班级 -->
+                {% if total_pages >= 1 and graduation_status != 'graduated' %}
+                <nav aria-label="班级分页">
+                    <ul class="pagination justify-content-center">
+                        {% if page > 1 %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('classes', page=page-1, search=search_query, major=major_filter, graduation_status='current') }}">上一页</a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for p in range(1, total_pages + 1) %}
+                            {% if p >= page - 2 and p <= page + 2 %}
+                            <li class="page-item {% if p == page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('classes', page=p, search=search_query, major=major_filter, graduation_status='current') }}">{{ p }}</a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page < total_pages %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('classes', page=page+1, search=search_query, major=major_filter, graduation_status='current') }}">下一页</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                <div class="text-center text-muted">
+                    <small>共 {{ total }} 条记录，第 {{ page }}/{{ total_pages }} 页</small>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- 已毕业班级标签页 -->
+            <div class="tab-pane fade {% if graduation_status == 'graduated' %}show active{% endif %}" id="graduated" role="tabpanel" aria-labelledby="graduated-tab">
+                <!-- 搜索/筛选 -->
+                <form method="get" class="row g-3 mb-4">
+                    <input type="hidden" name="graduation_status" value="graduated">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <input type="text" name="search" class="form-control" placeholder="搜索班级名称..." value="{{ search_query }}">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <select name="major" class="form-select" onchange="this.form.submit()">
+                            <option value="">全部专业</option>
+                            {% for major in majors %}
+                            <option value="{{ major }}" {% if major_filter == major %}selected{% endif %}>{{ major }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>班级名称</th>
+                                <th>专业</th>
+                                <th>年级</th>
+                                <th>学生人数</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if graduated_classes %}
+                                {% for cls in graduated_classes %}
+                                <tr style="cursor: pointer;" onclick="window.location.href='{{ url_for('class_detail', class_name=cls.class_name) }}'" {% if highlighted_class and cls.class_name == highlighted_class %}class="table-warning"{% endif %}>
+                                    <td>
+                                        {% if highlighted_class and cls.class_name == highlighted_class %}<i class="bi bi-star-fill text-warning me-1"></i>{% endif %}
+                                        {{ cls.class_name }}
+                                        <span class="badge bg-secondary ms-2">已毕业</span>
+                                    </td>
+                                    <td>{{ cls.major or '-' }}</td>
+                                    <td>{{ cls.grade_year or '-' }}</td>
+                                    <td><span class="badge bg-secondary">{{ cls.student_count or 0 }}</span></td>
+                                    <td onclick="event.stopPropagation();">
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button type="button" class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#editClassModal" onclick="loadClassData({{ cls.id }}, '{{ cls.class_name }}', '{{ cls.major or '' }}', '{{ cls.grade_year or '' }}')">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger" onclick="deleteClass({{ cls.id }}, '{{ cls.class_name }}')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    <i class="bi bi-mortarboard" style="font-size: 2rem;"></i>
+                                    <p class="mt-2">暂无已毕业班级数据</p>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 分页 - 已毕业班级 -->
+                {% if total_pages >= 1 and graduation_status == 'graduated' %}
+                <nav aria-label="班级分页">
+                    <ul class="pagination justify-content-center">
+                        {% if page > 1 %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('classes', page=page-1, search=search_query, major=major_filter, graduation_status='graduated') }}">上一页</a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for p in range(1, total_pages + 1) %}
+                            {% if p >= page - 2 and p <= page + 2 %}
+                            <li class="page-item {% if p == page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('classes', page=p, search=search_query, major=major_filter, graduation_status='graduated') }}">{{ p }}</a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page < total_pages %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('classes', page=page+1, search=search_query, major=major_filter, graduation_status='graduated') }}">下一页</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                <div class="text-center text-muted">
+                    <small>共 {{ total }} 条记录，第 {{ page }}/{{ total_pages }} 页</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑班级弹框 -->
+<div class="modal fade" id="editClassModal" tabindex="-1" aria-labelledby="editClassModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editClassModalLabel">编辑班级</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editClassForm" method="post" action="{{ url_for('edit_class') }}">
+                <div class="modal-body">
+                    <input type="hidden" id="edit_class_id" name="id">
+                    <div class="mb-3">
+                        <label for="edit_class_name" class="form-label">班级名称 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="edit_class_name" name="class_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_major" class="form-label">专业</label>
+                        <select class="form-select" id="edit_major" name="major">
+                            <option value="">请选择专业</option>
+                            {% for major in majors %}
+                            <option value="{{ major }}">{{ major }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_grade_year" class="form-label">年级</label>
+                        <select class="form-select" id="edit_grade_year" name="grade_year">
+                            <option value="">请选择年级</option>
+                            <option value="2024">2024级</option>
+                            <option value="2023">2023级</option>
+                            <option value="2022">2022级</option>
+                            <option value="2021">2021级</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">保存修改</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+// 加载班级数据到弹框
+function loadClassData(id, className, major, gradeYear) {
+    document.getElementById('edit_class_id').value = id;
+    document.getElementById('edit_class_name').value = className;
+    document.getElementById('edit_major').value = major;
+    document.getElementById('edit_grade_year').value = gradeYear;
+}
+
+// 删除班级
+function deleteClass(id, className) {
+    if (confirm('确定要删除班级 "' + className + '" 吗？\n\n注意：删除班级不会删除该班级的学生，但学生的班级信息将变为空。')) {
+        // 创建隐藏表单提交删除请求
+        const form = document.createElement('form');
+        form.method = 'post';
+        form.action = '{{ url_for("delete_class") }}';
+        
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = 'id';
+        csrfToken.value = id;
+        form.appendChild(csrfToken);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// 设置班级为毕业状态
+function graduateClass(className) {
+    if (confirm('确认要将该班级设置为全部毕业状态吗？\n\n操作将：\n1. 将该班级标记为已毕业\n2. 将该班级所有学生的毕业状态设置为"已毕业"')) {
+        // 创建隐藏表单提交毕业请求
+        const form = document.createElement('form');
+        form.method = 'post';
+        // 使用正确的URL，注意：这里需要动态构建URL
+        form.action = '/classes/' + encodeURIComponent(className) + '/graduate';
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// 标签页切换时更新URL
+document.addEventListener('DOMContentLoaded', function() {
+    const tabs = document.querySelectorAll('#classTabs button[data-bs-toggle="tab"]');
+    tabs.forEach(tab => {
+        tab.addEventListener('shown.bs.tab', function(event) {
+            const target = event.target.getAttribute('data-bs-target');
+            const graduationStatus = target === '#graduated' ? 'graduated' : 'current';
+            
+            // 更新URL参数
+            const url = new URL(window.location);
+            url.searchParams.set('graduation_status', graduationStatus);
+            url.searchParams.delete('page'); // 切换到第一页
+            
+            // 更新浏览器URL但不刷新页面
+            window.history.replaceState({}, '', url);
+        });
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

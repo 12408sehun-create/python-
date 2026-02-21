@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}学生列表 - 大学生管理系统{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4><i class="bi bi-people"></i> 学生列表</h4>
+            <a href="{{ url_for('add_student') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> 添加学生
+            </a>
+        </div>
+        
+        <!-- 搜索和筛选 -->
+        <form method="get" class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control" placeholder="搜索姓名、学号、班级..." value="{{ search_query }}">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <select name="major" class="form-select" onchange="this.form.submit()">
+                    <option value="">全部专业</option>
+                    <option value="中文系" {% if major_filter == '中文系' %}selected{% endif %}>中文系</option>
+                    <option value="英文系" {% if major_filter == '英文系' %}selected{% endif %}>英文系</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="class" class="form-select" onchange="this.form.submit()">
+                    <option value="">全部班级</option>
+                    <option value="未分班" {% if class_filter == '未分班' %}selected{% endif %}>未分班</option>
+                    {% for cls in all_classes %}
+                    <option value="{{ cls.class_name }}" {% if class_filter == cls.class_name %}selected{% endif %}>
+                        {{ cls.class_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% if search_query or major_filter or class_filter %}
+            <div class="col-md-2">
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> 清除筛选
+                </a>
+            </div>
+            {% endif %}
+        </form>
+        
+        <!-- 学生列表 -->
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>学号</th>
+                        <th>姓名</th>
+                        <th>性别</th>
+                        <th>年龄</th>
+                        <th>专业</th>
+                        <th>班级</th>
+                        <th>年级</th>
+                        <th>联系电话</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if students %}
+                        {% for student in students %}
+                        <tr {% if highlighted_student and student.id == highlighted_student %}class="table-warning"{% endif %}>
+                            <td>
+                                {% if highlighted_student and student.id == highlighted_student %}<i class="bi bi-star-fill text-warning me-1"></i>{% endif %}
+                                {{ student.student_id }}
+                            </td>
+                            <td>{{ student.name }}</td>
+                            <td>
+                                {% if student.gender == '男' %}
+                                <span class="badge bg-primary">{{ student.gender }}</span>
+                                {% else %}
+                                <span class="badge bg-danger">{{ student.gender }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ student.age }}</td>
+                            <td>{{ student.major }}</td>
+                            <td>{{ student.class_name }}</td>
+                            <td>{{ student.grade_year if student.grade_year else '-' }}</td>
+                            <td>{{ student.phone|mask_phone if student.phone else '-' }}</td>
+                            <td>
+                                <a href="{{ url_for('view_student', id=student.id) }}" class="btn btn-sm btn-info text-white" title="查看">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ url_for('edit_student', id=student.id) }}" class="btn btn-sm btn-warning" title="编辑">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form action="{{ url_for('delete_student', id=student.id) }}" method="post" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="删除" onclick="return confirm('确定要删除该学生吗？')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                            <p class="mt-2">暂无学生数据</p>
+                            <a href="{{ url_for('add_student') }}" class="btn btn-primary btn-sm">添加第一个学生</a>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 分页 -->
+        {% if total_pages >= 1 %}
+        <nav aria-label="学生列表分页">
+            <ul class="pagination justify-content-center mt-3">
+                {% if page > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('index', page=page-1, search=search_query, major=major_filter, class=class_filter) }}">上一页</a>
+                </li>
+                {% endif %}
+                
+                {% for p in range(1, total_pages + 1) %}
+                    {% if p >= page - 2 and p <= page + 2 %}
+                    <li class="page-item {% if p == page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('index', page=p, search=search_query, major=major_filter, class=class_filter) }}">{{ p }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page < total_pages %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('index', page=page+1, search=search_query, major=major_filter, class=class_filter) }}">下一页</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        <div class="text-center text-muted">
+            <small>共 {{ total }} 条记录，第 {{ page }}/{{ total_pages }} 页</small>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

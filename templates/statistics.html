@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+
+{% block title %}数据统计 - 大学生管理系统{% endblock %}
+
+{% block content %}
+<style>
+    .chart-container {
+        height: 200px;
+        position: relative;
+    }
+    .chart-container canvas {
+        max-height: 100%;
+        max-width: 100%;
+    }
+</style>
+<div class="row">
+    <!-- 总人数卡片 -->
+    <div class="col-md-12">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title">{% if major_filter %}{{ major_filter }}{% else %}全校{% endif %}学生总人数</h6>
+                        <h2 class="mb-0">{{ total_students }} 人</h2>
+                    </div>
+                    <i class="bi bi-people" style="font-size: 3rem; opacity: 0.5;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- 专业人数饼图 -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-pie-chart"></i> 各专业人数分布</h5>
+                <div class="chart-container" id="majorContainer">
+                    <canvas id="majorChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 性别比例饼图 -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-pie-chart"></i> 男女比例</h5>
+                <div class="chart-container" id="genderContainer">
+                    <canvas id="genderChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 专业筛选 -->
+<div class="row mt-3 mb-3">
+    <div class="col-md-12">
+        <form method="get" class="d-flex gap-2 align-items-center justify-content-center">
+            <label class="mb-0">按专业筛选：</label>
+            <select name="major" class="form-select form-select-sm" style="width: auto;" onchange="this.form.submit()">
+                <option value="">全部专业</option>
+                <option value="中文系" {% if major_filter == '中文系' %}selected{% endif %}>中文系</option>
+                <option value="英文系" {% if major_filter == '英文系' %}selected{% endif %}>英文系</option>
+            </select>
+            {% if start_date or end_date %}
+            <input type="date" name="start_date" class="form-control form-control-sm" value="{{ start_date }}" placeholder="开始日期" style="width: auto;">
+            <input type="date" name="end_date" class="form-control form-control-sm" value="{{ end_date }}" placeholder="结束日期" style="width: auto;">
+            <button type="submit" class="btn btn-primary btn-sm">筛选</button>
+            {% else %}
+            <input type="hidden" name="start_date" value="">
+            <input type="hidden" name="end_date" value="">
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- 考勤统计 -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-calendar-check"></i> 考勤统计</h5>
+                
+                <!-- 日期筛选 -->
+                <form method="get" class="row g-3 mb-3">
+                    {% if major_filter %}
+                    <input type="hidden" name="major" value="{{ major_filter }}">
+                    {% endif %}
+                    <div class="col-5">
+                        <input type="date" name="start_date" class="form-control form-control-sm" value="{{ start_date }}" placeholder="开始日期">
+                    </div>
+                    <div class="col-5">
+                        <input type="date" name="end_date" class="form-control form-control-sm" value="{{ end_date }}" placeholder="结束日期">
+                    </div>
+                    <div class="col-2">
+                        <button type="submit" class="btn btn-primary btn-sm w-100">筛选</button>
+                    </div>
+                </form>
+                
+                {% if attendance_stats %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>状态</th>
+                                <th>次数</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in attendance_stats %}
+                            <tr style="cursor: pointer;" onclick="window.location.href='{{ url_for('statistics_attendance_detail', status=stat.status) }}{% if start_date or end_date or major_filter %}?{% if major_filter %}major={{ major_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% endif %}'">
+                                <td>
+                                    {% if stat.status == '出勤' %}
+                                    <span class="status-present"><i class="bi bi-check-circle"></i> 出勤</span>
+                                    {% elif stat.status == '缺勤' %}
+                                    <span class="status-absent"><i class="bi bi-x-circle"></i> 缺勤</span>
+                                    {% elif stat.status == '迟到' %}
+                                    <span class="status-late"><i class="bi bi-clock"></i> 迟到</span>
+                                    {% elif stat.status == '请假' %}
+                                    <span class="status-leave"><i class="bi bi-calendar-minus"></i> 请假</span>
+                                    {% endif %}
+                                </td>
+                                <td><strong>{{ stat.count }}</strong> 次</td>
+                            </tr>
+                            {% endfor %}
+                            <tr class="table-secondary">
+                                <td><strong>合计</strong></td>
+                                <td><strong>{{ total_attendance }}</strong> 次</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-4">暂无数据</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- 成绩分段统计 -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-bar-chart"></i> 成绩分段统计</h5>
+                
+                <!-- 日期筛选 -->
+                <form method="get" class="row g-3 mb-3">
+                    {% if major_filter %}
+                    <input type="hidden" name="major" value="{{ major_filter }}">
+                    {% endif %}
+                    {% if start_date %}
+                    <input type="hidden" name="start_date" value="{{ start_date }}">
+                    {% endif %}
+                    {% if end_date %}
+                    <input type="hidden" name="end_date" value="{{ end_date }}">
+                    {% endif %}
+                    <div class="col-5">
+                        <input type="date" name="grade_start_date" class="form-control form-control-sm" value="{{ grade_start_date }}" placeholder="开始日期">
+                    </div>
+                    <div class="col-5">
+                        <input type="date" name="grade_end_date" class="form-control form-control-sm" value="{{ grade_end_date }}" placeholder="结束日期">
+                    </div>
+                    <div class="col-2">
+                        <button type="submit" class="btn btn-primary btn-sm w-100">筛选</button>
+                    </div>
+                </form>
+                
+                <div class="chart-container" id="gradeContainer">
+                    <canvas id="gradeChart"></canvas>
+                </div>
+                
+                <!-- 成绩分段表格 - 可点击 -->
+                {% if grade_stats %}
+                <div class="table-responsive mt-3">
+                    <table class="table table-sm table-hover">
+                        <tbody>
+                            {% for stat in grade_stats %}
+                            <tr style="cursor: pointer;" onclick="window.location.href='{{ url_for('statistics_grade_detail', range=stat.range) }}{% if major_filter or grade_start_date or grade_end_date %}?{% if major_filter %}major={{ major_filter }}{% endif %}{% if grade_start_date %}&grade_start_date={{ grade_start_date }}{% endif %}{% if grade_end_date %}&grade_end_date={{ grade_end_date }}{% endif %}{% endif %}'">
+                                <td>{{ stat.range }}分</td>
+                                <td><strong>{{ stat.count }}</strong> 人</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // 使用 requestAnimationFrame 确保在下一帧渲染
+    window.requestAnimationFrame(function() {
+        // 专业人数饼图
+        var majorCtx = document.getElementById('majorChart').getContext('2d');
+        var majorData = {
+            labels: [
+                {% for major in major_stats %}'{{ major.major }}',{% endfor %}
+            ],
+            datasets: [{
+                data: [
+                    {% for major in major_stats %}{{ major.count }},{% endfor %}
+                ],
+                backgroundColor: [
+                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'
+                ]
+            }]
+        };
+        new Chart(majorCtx, {
+            type: 'pie',
+            data: majorData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+        
+        // 性别比例饼图
+        var genderCtx = document.getElementById('genderChart').getContext('2d');
+        var genderData = {
+            labels: [
+                {% for gender in gender_stats %}'{{ gender.gender }}',{% endfor %}
+            ],
+            datasets: [{
+                data: [
+                    {% for gender in gender_stats %}{{ gender.count }},{% endfor %}
+                ],
+                backgroundColor: [
+                    '#36A2EB', '#FF6384'
+                ]
+            }]
+        };
+        new Chart(genderCtx, {
+            type: 'pie',
+            data: genderData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+        
+        // 成绩分段统计柱状图 - 从高到低排列
+        var gradeCtx = document.getElementById('gradeChart').getContext('2d');
+        var gradeLabels = ['90-100', '80-89', '70-79', '60-69', '60以下'];
+        var gradeCounts = [0, 0, 0, 0, 0];
+        {% for grade in grade_stats %}
+            var idx = gradeLabels.indexOf('{{ grade.range }}');
+            if (idx >= 0) gradeCounts[idx] = {{ grade.count }};
+        {% endfor %}
+        var gradeData = {
+            labels: gradeLabels,
+            datasets: [{
+                label: '人数',
+                data: gradeCounts,
+                backgroundColor: [
+                    '#4BC0C0', '#36A2EB', '#FFCE56', '#FF6384', '#FF9F40'
+                ]
+            }]
+        };
+        new Chart(gradeCtx, {
+            type: 'bar',
+            data: gradeData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

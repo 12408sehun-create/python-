@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}大学生管理系统{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        body {
+            visibility: hidden;
+            background-color: #f5f7fa;
+            font-family: "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+        .navbar {
+            background: #1a3a5c;
+        }
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 20px;
+        }
+        .card {
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+        }
+        .table {
+            background: white;
+            border-radius: 8px;
+        }
+        .btn-primary {
+            background: #1a3a5c;
+            border: none;
+        }
+        .btn-primary:hover {
+            background: #2d5a87;
+        }
+        .sidebar {
+            min-height: 100vh;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+        .sidebar a {
+            padding: 12px 20px;
+            color: #333;
+            text-decoration: none;
+            display: block;
+            transition: all 0.3s;
+            border-radius: 5px;
+            margin: 2px 10px;
+        }
+        .sidebar a:hover, .sidebar a.active {
+            background: #1a3a5c;
+            color: white;
+        }
+        .sidebar-section {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .sidebar-section-title {
+            padding: 10px 20px;
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+        }
+        .stat-card {
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .grade-a { color: #28a745; font-weight: bold; }
+        .grade-b { color: #17a2b8; font-weight: bold; }
+        .grade-c { color: #ffc107; font-weight: bold; }
+        .grade-d { color: #fd7e14; font-weight: bold; }
+        .grade-f { color: #dc3545; font-weight: bold; }
+        .status-present { color: #28a745; }
+        .status-absent { color: #dc3545; }
+        .status-late { color: #ffc107; }
+        .status-leave { color: #17a2b8; }
+        .page-title {
+            color: #1a3a5c;
+            font-size: 24px;
+            font-weight: bold;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #1a3a5c;
+            margin-bottom: 25px;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/students">
+                <i class="bi bi-school"></i> 大学生管理系统
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/students">
+                            <i class="bi bi-people"></i> 学生管理
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('grades') }}">
+                            <i class="bi bi-graph-up"></i> 成绩管理
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('attendance') }}">
+                            <i class="bi bi-calendar-check"></i> 考勤管理
+                        </a>
+                    </li>
+                {% if current_login_type == 'admin' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('statistics') }}">
+                            <i class="bi bi-bar-chart"></i> 数据统计
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if current_login_type in ['teacher', 'admin'] %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="bi bi-house"></i> 首页
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if current_username %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> 欢迎：{{ current_username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/students"><i class="bi bi-gear"></i> 管理后台</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> 退出登录</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Toast 通知容器 - 固定在页面顶部 -->
+    <div class="toast-container position-fixed top-0 start-50 translate-middle-x" style="z-index: 1100; margin-top: 70px;">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="toast show" role="alert" data-bs-delay="5000" autohide="false">
+                        <div class="toast-header bg-{{ 'success' if category == 'success' else 'danger' }} text-white">
+                            <strong class="me-auto">
+                                <i class="bi {{ 'bi-check-circle-fill' if category == 'success' else 'bi-exclamation-triangle-fill' }}"></i>
+                                {{ '成功' if category == 'success' else '提示' }}
+                            </strong>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                        </div>
+                        <div class="toast-body">
+                            {{ message }}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- 侧边栏 -->
+            <div class="col-md-2 sidebar d-none d-md-block">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">学生管理</div>
+                    <a href="{{ url_for('index') }}" class="{{ 'active' if request.endpoint == 'index' else '' }}">
+                        <i class="bi bi-people me-2"></i> 学生列表
+                    </a>
+                    <a href="{{ url_for('add_student') }}" class="{{ 'active' if request.endpoint == 'add_student' else '' }}">
+                        <i class="bi bi-person-plus me-2"></i> 添加学生
+                    </a>
+                    <a href="{{ url_for('classes') }}" class="{{ 'active' if request.endpoint == 'classes' else '' }}">
+                        <i class="bi bi-diagram-3 me-2"></i> 班级管理
+                    </a>
+                    {% if current_login_type == 'admin' %}
+                    <a href="{{ url_for('tuition') }}" class="{{ 'active' if request.endpoint == 'tuition' else '' }}">
+                        <i class="bi bi-currency-dollar me-2"></i> 学费管理
+                    </a>
+                    {% endif %}
+                </div>
+                
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">教学管理</div>
+                    <a href="{{ url_for('grades') }}" class="{{ 'active' if request.endpoint and 'grade' in request.endpoint else '' }}">
+                        <i class="bi bi-graph-up me-2"></i> 成绩管理
+                    </a>
+                    <a href="{{ url_for('attendance') }}" class="{{ 'active' if request.endpoint and 'attendance' in request.endpoint else '' }}">
+                        <i class="bi bi-calendar-check me-2"></i> 考勤管理
+                    </a>
+                </div>
+                
+                {% if current_login_type == 'admin' %}
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">系统</div>
+                    <a href="{{ url_for('statistics') }}" class="{{ 'active' if request.endpoint == 'statistics' else '' }}">
+                        <i class="bi bi-bar-chart me-2"></i> 数据统计
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- 主内容区 -->
+            <div class="col-md-10 p-4">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+
+<!-- 引入翻译脚本 → 所有页面自动生效 -->
+<script src="/static/translate-global.js"></script>
+</body>
+</html>

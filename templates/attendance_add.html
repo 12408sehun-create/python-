@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}添加考勤 - 大学生管理系统{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <h4 class="mb-4"><i class="bi bi-calendar-check"></i> 批量添加考勤</h4>
+        
+        <form method="post" id="attendanceForm">
+            <!-- 筛选条件 -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <label for="major" class="form-label">专业</label>
+                    <select class="form-select" id="major" name="major">
+                        <option value="">全部专业</option>
+                        <option value="中文系">中文系</option>
+                        <option value="英文系">英文系</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="class_name" class="form-label">班级</label>
+                    <select class="form-select" id="class_name" name="class_name">
+                        <option value="">请选择班级</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="date" class="form-label">日期 <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" id="date" name="date" required>
+                </div>
+                <div class="col-md-3">
+                    <label for="course_name" class="form-label">课程名称</label>
+                    <input type="text" class="form-control" id="course_name" name="course_name" placeholder="请输入课程名称">
+                </div>
+            </div>
+            
+            <!-- 学生考勤列表 -->
+            <div id="studentListSection" style="display: none;">
+                <div class="alert alert-info mb-3">
+                    <i class="bi bi-info-circle"></i> 已选择班级：<span id="selectedClassName"></span>，共 <span id="studentCount">0</span> 名学生
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>学号</th>
+                                <th>姓名</th>
+                                <th>考勤状态</th>
+                                <th>备注</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div id="noStudentAlert" class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i> 请先选择专业和班级，系统将显示该班级所有学生，方便批量录入考勤
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
+                    <i class="bi bi-check-circle"></i> 保存
+                </button>
+                <a href="{{ url_for('attendance') }}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> 取消
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// 班级数据（从后端获取）
+var allClasses = [
+    {% for cls in classes %}
+    {id: '{{ cls.id }}', name: '{{ cls.class_name }}', major: '{{ cls.major }}'},
+    {% endfor %}
+];
+
+// 学生数据（从后端获取）
+var allStudents = [
+    {% for student in all_students %}
+    {student_id: '{{ student.student_id }}', name: '{{ student.name }}', class_name: '{{ student.class_name }}'},
+    {% endfor %}
+];
+
+// 专业变化时更新班级下拉框
+document.getElementById('major').addEventListener('change', function() {
+    var major = this.value;
+    var classSelect = document.getElementById('class_name');
+    
+    // 清空班级选项
+    classSelect.innerHTML = '<option value="">请选择班级</option>';
+    
+    // 根据专业筛选班级
+    var filteredClasses = allClasses;
+    if (major) {
+        filteredClasses = allClasses.filter(function(c) { return c.major === major; });
+    }
+    
+    // 添加班级选项
+    filteredClasses.forEach(function(cls) {
+        var option = document.createElement('option');
+        option.value = cls.name;
+        option.textContent = cls.name;
+        classSelect.appendChild(option);
+    });
+    
+    // 重置学生列表
+    resetStudentList();
+});
+
+// 班级变化时更新学生列表
+document.getElementById('class_name').addEventListener('change', function() {
+    var className = this.value;
+    showStudents(className);
+});
+
+function showStudents(className) {
+    var studentListSection = document.getElementById('studentListSection');
+    var noStudentAlert = document.getElementById('noStudentAlert');
+    var studentTableBody = document.getElementById('studentTableBody');
+    var selectedClassName = document.getElementById('selectedClassName');
+    var studentCount = document.getElementById('studentCount');
+    var submitBtn = document.getElementById('submitBtn');
+    
+    if (!className) {
+        studentListSection.style.display = 'none';
+        noStudentAlert.style.display = 'block';
+        submitBtn.disabled = true;
+        return;
+    }
+    
+    // 筛选该班级的学生
+    var students = allStudents.filter(function(s) { return s.class_name === className; });
+    
+    if (students.length === 0) {
+        studentListSection.style.display = 'none';
+        noStudentAlert.style.display = 'block';
+        noStudentAlert.innerHTML = '<i class="bi bi-exclamation-triangle"></i> 该班级暂无学生，请先添加学生';
+        submitBtn.disabled = true;
+        return;
+    }
+    
+    // 显示学生列表
+    selectedClassName.textContent = className;
+    studentCount.textContent = students.length;
+    studentTableBody.innerHTML = '';
+    
+    students.forEach(function(student) {
+        var tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + student.student_id + '</td>' +
+                       '<td>' + student.name + '</td>' +
+                       '<td><select class="form-select form-select-sm" name="status_' + student.student_id + '">' +
+                       '<option value="出勤">出勤</option>' +
+                       '<option value="缺勤">缺勤</option>' +
+                       '<option value="迟到">迟到</option>' +
+                       '<option value="请假">请假</option>' +
+                       '</select></td>' +
+                       '<td><input type="text" class="form-control form-control-sm" name="remarks_' + student.student_id + '" placeholder="备注"></td>';
+        studentTableBody.appendChild(tr);
+    });
+    
+    studentListSection.style.display = 'block';
+    noStudentAlert.style.display = 'none';
+    submitBtn.disabled = false;
+}
+
+function resetStudentList() {
+    document.getElementById('studentListSection').style.display = 'none';
+    document.getElementById('noStudentAlert').style.display = 'block';
+    document.getElementById('noStudentAlert').innerHTML = '<i class="bi bi-exclamation-triangle"></i> 请先选择专业和班级，系统将显示该班级所有学生，方便批量录入考勤';
+    document.getElementById('submitBtn').disabled = true;
+}
+
+// 页面加载时初始化班级列表
+document.addEventListener('DOMContentLoaded', function() {
+    var major = document.getElementById('major').value;
+    var classSelect = document.getElementById('class_name');
+    
+    var filteredClasses = allClasses;
+    if (major) {
+        filteredClasses = allClasses.filter(function(c) { return c.major === major; });
+    }
+    
+    classSelect.innerHTML = '<option value="">请选择班级</option>';
+    filteredClasses.forEach(function(cls) {
+        var option = document.createElement('option');
+        option.value = cls.name;
+        option.textContent = cls.name;
+        classSelect.appendChild(option);
+    });
+});
+</script>
+{% endblock %}

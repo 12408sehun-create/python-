@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}编辑学生 - {{ cls.class_name }} - 大学生管理系统{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <h4 class="mb-4"><i class="bi bi-pencil"></i> 编辑学生 - {{ cls.class_name }}</h4>
+        
+        <form method="post">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="student_id" class="form-label">学号 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="student_id" name="student_id" value="{{ student.student_id }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="name" class="form-label">姓名 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="name" name="name" value="{{ student.name }}" required>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="gender" class="form-label">性别 <span class="text-danger">*</span></label>
+                    <select class="form-select" id="gender" name="gender" required>
+                        <option value="男" {% if student.gender == '男' %}selected{% endif %}>男</option>
+                        <option value="女" {% if student.gender == '女' %}selected{% endif %}>女</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="age" class="form-label">年龄 <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" id="age" name="age" value="{{ student.age }}" min="16" max="30" required>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="major" class="form-label">专业 <span class="text-danger">*</span></label>
+                    <select class="form-select" id="major" name="major" required>
+                        {% for major in majors %}
+                        <option value="{{ major }}" {% if student.major == major %}selected{% endif %}>{{ major }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="class_name" class="form-label">班级 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="class_name" name="class_name" value="{{ cls.class_name }}" readonly>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="grade_year" class="form-label">年级 <span class="text-danger">*</span></label>
+                    <select class="form-select" id="grade_year" name="grade_year" required>
+                        <option value="">请选择</option>
+                        <option value="2024" {% if student.grade_year == '2024' %}selected{% endif %}>2024级</option>
+                        <option value="2023" {% if student.grade_year == '2023' %}selected{% endif %}>2023级</option>
+                        <option value="2022" {% if student.grade_year == '2022' %}selected{% endif %}>2022级</option>
+                        <option value="2021" {% if student.grade_year == '2021' %}selected{% endif %}>2021级</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="phone" class="form-label">联系电话</label>
+                    <input type="tel" class="form-control" id="phone" name="phone" value="{{ student.phone or '' }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="email" class="form-label">电子邮箱</label>
+                    <input type="email" class="form-control" id="email" name="email" value="{{ student.email or '' }}">
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="address" class="form-label">家庭住址</label>
+                <textarea class="form-control" id="address" name="address" rows="2">{{ student.address or '' }}</textarea>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> 保存修改
+                </button>
+                <a href="{{ url_for('class_detail', class_name=cls.class_name) }}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> 取消
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

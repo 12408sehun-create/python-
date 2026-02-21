@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 大学生管理系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #1a3a5c 0%, #0d2137 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .login-container {
+            width: 100%;
+            max-width: 450px;
+            padding: 20px;
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .login-header {
+            background: linear-gradient(135deg, #1a3a5c 0%, #2d5a87 100%);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+        
+        .login-header .icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+        
+        .login-header h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .login-header p {
+            margin: 10px 0 0 0;
+            opacity: 0.8;
+            font-size: 14px;
+        }
+        
+        .login-body {
+            padding: 40px 30px;
+        }
+        
+        .form-label {
+            color: #1a3a5c;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        .form-control {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px 15px;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus {
+            border-color: #1a3a5c;
+            box-shadow: 0 0 0 3px rgba(26, 58, 92, 0.1);
+        }
+        
+        .password-toggle {
+            cursor: pointer;
+        }
+        
+        .btn-login {
+            background: linear-gradient(135deg, #1a3a5c 0%, #2d5a87 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(26, 58, 92, 0.3);
+        }
+        
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .back-link a {
+            color: #1a3a5c;
+            text-decoration: none;
+        }
+        
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+        
+        .user-type {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+        
+        .user-type .icon {
+            font-size: 36px;
+            color: #1a3a5c;
+            margin-bottom: 10px;
+        }
+        
+        .user-type .title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1a3a5c;
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast 通知容器 - 固定在页面顶部 -->
+    <div class="toast-container position-fixed top-0 start-50 translate-middle-x" style="z-index: 1100; margin-top: 70px;">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="toast show" role="alert" data-bs-delay="5000" autohide="false">
+                        <div class="toast-header bg-{{ 'success' if category == 'success' else 'danger' }} text-white">
+                            <strong class="me-auto">
+                                <i class="bi {{ 'bi-check-circle-fill' if category == 'success' else 'bi-exclamation-triangle-fill' }}"></i>
+                                {{ '成功' if category == 'success' else '提示' }}
+                            </strong>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                        </div>
+                        <div class="toast-body">
+                            {{ message }}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="icon">
+                    {% if login_type == 'teacher' %}
+                    <i class="bi bi-person-badge"></i>
+                    {% else %}
+                    <i class="bi bi-shield-lock"></i>
+                    {% endif %}
+                </div>
+                <h2>大学生管理系统</h2>
+                <p>College Student Management System</p>
+            </div>
+            
+            <div class="login-body">
+                <!-- 用户类型显示 -->
+                <div class="user-type">
+                    <div class="icon">
+                        {% if login_type == 'teacher' %}
+                        <i class="bi bi-person-badge"></i>
+                        {% else %}
+                        <i class="bi bi-shield-lock"></i>
+                        {% endif %}
+                    </div>
+                    <div class="title">
+                        {% if login_type == 'teacher' %}
+                        老师登录
+                        {% else %}
+                        管理员登录
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <form method="post">
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if login_type == 'teacher' %}
+                            <i class="bi bi-person-badge"></i> 工号
+                            {% else %}
+                            <i class="bi bi-shield-lock"></i> 用户名
+                            {% endif %}
+                        </label>
+                        <input type="text" class="form-control" name="username" placeholder="请输入{% if login_type == 'teacher' %}工号{% else %}用户名{% endif %}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label"><i class="bi bi-key"></i> 密码</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" name="password" id="passwordInput" placeholder="请输入密码" required>
+                            <span class="input-group-text password-toggle" onclick="togglePassword()">
+                                <i class="bi bi-eye" id="toggleIcon"></i>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-login">
+                        <i class="bi bi-box-arrow-in-right"></i> 登录
+                    </button>
+                </form>
+                
+                <div class="back-link">
+                    <a href="/about">
+                        <i class="bi bi-arrow-left"></i> 返回首页
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('passwordInput');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('bi-eye');
+                toggleIcon.classList.add('bi-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('bi-eye-slash');
+                toggleIcon.classList.add('bi-eye');
+            }
+        }
+    </script>
+
+    
+<!-- 引入翻译脚本 → 所有页面自动生效 -->
+<script src="/static/translate-global.js"></script>
+</body>
+</html>

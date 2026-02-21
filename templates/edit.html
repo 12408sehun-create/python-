@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}编辑学生 - 大学生管理系统{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <h4 class="mb-4"><i class="bi bi-pencil"></i> 编辑学生</h4>
+        
+        <form method="post">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="student_id" class="form-label">学号 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="student_id" name="student_id" value="{{ student.student_id }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="name" class="form-label">姓名 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="name" name="name" value="{{ student.name }}" required>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="gender" class="form-label">性别 <span class="text-danger">*</span></label>
+                    <select class="form-select" id="gender" name="gender" required>
+                        <option value="男" {% if student.gender == '男' %}selected{% endif %}>男</option>
+                        <option value="女" {% if student.gender == '女' %}selected{% endif %}>女</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="age" class="form-label">年龄 <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" id="age" name="age" value="{{ student.age }}" min="16" max="30" required>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="major" class="form-label">专业 <span class="text-danger">*</span></label>
+                    <select class="form-select" id="major" name="major" required>
+                        {% for major in majors %}
+                        <option value="{{ major }}" {% if student.major == major %}selected{% endif %}>{{ major }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="class_name" class="form-label">班级 <span class="text-danger">*</span></label>
+                    <select class="form-select" id="class_name" name="class_name" required>
+                        <option value="{{ student.class_name }}">{{ student.class_name }}</option>
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="grade_year" class="form-label">年级 <span class="text-danger">*</span></label>
+                    <select class="form-select" id="grade_year" name="grade_year" required>
+                        <option value="">请选择</option>
+                        <option value="2024" {% if student.grade_year == '2024' %}selected{% endif %}>2024级</option>
+                        <option value="2023" {% if student.grade_year == '2023' %}selected{% endif %}>2023级</option>
+                        <option value="2022" {% if student.grade_year == '2022' %}selected{% endif %}>2022级</option>
+                        <option value="2021" {% if student.grade_year == '2021' %}selected{% endif %}>2021级</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="phone" class="form-label">联系电话</label>
+                    <input type="tel" class="form-control" id="phone" name="phone" value="{{ student.phone or '' }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="email" class="form-label">电子邮箱</label>
+                    <input type="email" class="form-control" id="email" name="email" value="{{ student.email or '' }}">
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="address" class="form-label">家庭住址</label>
+                <textarea class="form-control" id="address" name="address" rows="2">{{ student.address or '' }}</textarea>
+            </div>
+            
+            <hr>
+            <h5 class="mb-3">学费信息</h5>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="enrollment_date" class="form-label">入学日期 <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" id="enrollment_date" name="enrollment_date" value="{{ student.enrollment_date or '' }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="months_paid" class="form-label">已缴月数 <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" id="months_paid" name="months_paid" min="0" value="{{ student.months_paid or 0 }}" required>
+                    <small class="text-muted">0=未缴，1-11=部分交，12及以上=已缴</small>
+                </div>
+            </div>
+            
+            <hr>
+            <h5 class="mb-3">毕业状态</h5>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="graduation_status" class="form-label">毕业状态 <span class="text-danger">*</span></label>
+                    <select class="form-select" id="graduation_status" name="graduation_status" required>
+                        <option value="在校" {% if student.graduation_status == '在校' %}selected{% endif %}>在校</option>
+                        <option value="已毕业" {% if student.graduation_status == '已毕业' %}selected{% endif %}>已毕业</option>
+                        <option value="离校" {% if student.graduation_status == '离校' %}selected{% endif %}>离校</option>
+                    </select>
+                    <small class="text-muted">注意：已毕业或离校的学生在学费管理中会显示相应状态</small>
+                </div>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> 保存修改
+                </button>
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> 取消
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// 专业-班级级联选择
+document.getElementById('major').addEventListener('change', function() {
+    var major = this.value;
+    var classSelect = document.getElementById('class_name');
+    
+    // 清空班级下拉框
+    classSelect.innerHTML = '<option value="">请先选择专业</option>';
+    
+    if (!major) {
+        return;
+    }
+    
+    // 从API获取该专业的班级
+    fetch('/api/classes/' + encodeURIComponent(major))
+        .then(response => response.json())
+        .then(data => {
+            if (data.classes && data.classes.length > 0) {
+                classSelect.innerHTML = '<option value="">请选择班级</option>';
+                // 添加"未分班"选项
+                var unassignedOption = document.createElement('option');
+                unassignedOption.value = '未分班';
+                unassignedOption.textContent = '未分班';
+                classSelect.appendChild(unassignedOption);
+                
+                // 添加该专业的班级
+                data.classes.forEach(function(className) {
+                    var option = document.createElement('option');
+                    option.value = className;
+                    option.textContent = className;
+                    classSelect.appendChild(option);
+                });
+            } else {
+                classSelect.innerHTML = '<option value="">请选择班级</option>';
+                // 即使没有班级，也添加"未分班"选项
+                var unassignedOption = document.createElement('option');
+                unassignedOption.value = '未分班';
+                unassignedOption.textContent = '未分班';
+                classSelect.appendChild(unassignedOption);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            classSelect.innerHTML = '<option value="">加载失败</option>';
+        });
+});
+
+// 页面加载时，如果当前班级是"未分班"，确保它出现在下拉框中
+document.addEventListener('DOMContentLoaded', function() {
+    var currentClass = '{{ student.class_name }}';
+    var classSelect = document.getElementById('class_name');
+    
+    if (currentClass === '未分班') {
+        // 清空下拉框
+        classSelect.innerHTML = '<option value="">请选择班级</option>';
+        
+        // 添加"未分班"选项并选中
+        var unassignedOption = document.createElement('option');
+        unassignedOption.value = '未分班';
+        unassignedOption.textContent = '未分班';
+        unassignedOption.selected = true;
+        classSelect.appendChild(unassignedOption);
+    }
+});
+</script>
+{% endblock %}

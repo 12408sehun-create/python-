@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}学生详情 - 大学生管理系统{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4><i class="bi bi-person-badge"></i> 学生详情</h4>
+            <div>
+                <a href="{{ url_for('edit_student', id=student.id) }}" class="btn btn-warning">
+                    <i class="bi bi-pencil"></i> 编辑
+                </a>
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> 返回
+                </a>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="40%" class="text-muted">学号</th>
+                        <td>{{ student.student_id }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">姓名</th>
+                        <td>{{ student.name }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">性别</th>
+                        <td>
+                            {% if student.gender == '男' %}
+                            <span class="badge bg-primary">{{ student.gender }}</span>
+                            {% else %}
+                            <span class="badge bg-danger">{{ student.gender }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">年龄</th>
+                        <td>{{ student.age }} 岁</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">专业</th>
+                        <td>{{ student.major }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">班级</th>
+                        <td>{{ student.class_name }}</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="40%" class="text-muted">联系电话</th>
+                        <td>{{ student.phone|mask_phone if student.phone else '-' }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">电子邮箱</th>
+                        <td>{{ student.email or '-' }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">家庭住址</th>
+                        <td>{{ student.address or '-' }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">平均分(GPA)</th>
+                        <td>
+                            {% if gpa %}
+                            <span class="badge bg-success">{{ "%.2f"|format(gpa) }}</span>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">创建时间</th>
+                        <td>{{ student.created_at }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">更新时间</th>
+                        <td>{{ student.updated_at }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 删除学生按钮 -->
+<div class="card">
+    <div class="card-body">
+        <div class="mt-4 p-3 bg-light rounded">
+            <form action="{{ url_for('delete_student', id=student.id) }}" method="post" style="display: inline;">
+                <button type="submit" class="btn btn-danger" onclick="return confirm('确定要删除该学生吗？此操作不可恢复！')">
+                    <i class="bi bi-trash"></i> 删除学生
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
