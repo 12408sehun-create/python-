@@ -67,7 +67,7 @@
                                 {% if highlighted_class_student == student.id %}<i class="bi bi-star-fill text-warning me-1"></i>{% endif %}
                                 {{ student.student_id }}
                             </td>
-                            <td>
+                            <td translate="no">
                                 <a href="{{ url_for('view_student', id=student.id) }}" class="text-decoration-none">
                                     {{ student.name }}
                                 </a>

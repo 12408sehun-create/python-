@@ -172,7 +172,9 @@
         if (!p) return NodeFilter.FILTER_REJECT;
         if (p.tagName === 'SCRIPT' || p.tagName === 'STYLE') return NodeFilter.FILTER_REJECT;
         if (p.classList.contains('no-translate')) return NodeFilter.FILTER_REJECT;
-        
+         // 👇 新增：跳过带有 no-translate 类名 或 translate="no" 属性的元素
+        if (p.classList.contains('no-translate') || p.hasAttribute('translate')) return NodeFilter.FILTER_REJECT;
+
         const text = node.textContent.trim();
         // 过滤纯数字，避免翻译后显示异常
         if (/^[\d,.]+$/.test(text)) {
