@@ -155,6 +155,7 @@ function showStudents(className) {
         tr.innerHTML = '<td>' + student.student_id + '</td>' +
                        '<td>' + student.name + '</td>' +
                        '<td><select class="form-select form-select-sm" name="status_' + student.student_id + '">' +
+                       '<option value="-" selected>-</option>' +
                        '<option value="出勤">出勤</option>' +
                        '<option value="缺勤">缺勤</option>' +
                        '<option value="迟到">迟到</option>' +

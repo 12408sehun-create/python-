@@ -987,7 +987,8 @@ def add_attendance():
                 remarks_key = f'remarks_{student_id}'
                 status = request.form.get(status_key, '出勤')
                 remarks = request.form.get(remarks_key, '')
-                
+                if status == '-':
+                    continue
                 try:
                     conn.execute('''
                         INSERT INTO attendance (student_id, date, status, remarks, course_name, created_at, updated_at)
