@@ -18,12 +18,30 @@
                     <input type="text" class="form-control" value="{{ grade.course_name }}" readonly>
                 </div>
             </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="attendance_score" class="form-label">出勤</label>
+                    <input type="number" class="form-control" id="attendance_score" name="attendance_score" value="{{ grade.attendance_score if grade.attendance_score is not none else '' }}" min="0" max="100" step="0.1">
+            </div>
+                <div class="col-md-4 mb-3">
+                    <label for="activity_score" class="form-label">活动</label>
+                    <input type="number" class="form-control" id="activity_score" name="activity_score" 
+               value="{{ grade.activity_score if grade.activity_score is not none else '' }}" min="0" max="100" step="0.1">
+            </div>
+                <div class="col-md-4 mb-3">
+                    <label for="final_score" class="form-label">期末</label>
+                    <input type="number" class="form-control" id="final_score" name="final_score" 
+               value="{{ grade.final_score if grade.final_score is not none else '' }}" min="0" max="100" step="0.1">
+            </div>
             
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label for="score" class="form-label">成绩 (0-100)</label>
+                    <label for="score" class="form-label">总分</label>
                     <input type="number" class="form-control" id="score" name="score" value="{{ grade.score if grade.score else '' }}" min="0" max="100" step="0.1">
                 </div>
+            </div>
+
                 <div class="col-md-6 mb-3">
                     <label for="exam_date" class="form-label">考试日期</label>
                     <input type="date" class="form-control" id="exam_date" name="exam_date" value="{{ grade.exam_date if grade.exam_date else '' }}">

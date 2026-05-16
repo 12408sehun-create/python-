@@ -217,12 +217,30 @@ def migrate_db():
     except sqlite3.OperationalError:
         cursor.execute('ALTER TABLE classes ADD COLUMN is_graduated INTEGER DEFAULT 0')
     
+
+    # 检查并添加 grades.attendance_score (出勤成绩)
+    try:
+        cursor.execute('SELECT attendance_score FROM grades LIMIT 1')
+    except sqlite3.OperationalError:
+        cursor.execute('ALTER TABLE grades ADD COLUMN attendance_score REAL')
+
+    # 检查并添加 grades.activity_score (活动成绩)
+    try:
+        cursor.execute('SELECT activity_score FROM grades LIMIT 1')
+    except sqlite3.OperationalError:
+        cursor.execute('ALTER TABLE grades ADD COLUMN activity_score REAL')
+
+    # 检查并添加 grades.final_score (期末成绩)
+    try:
+        cursor.execute('SELECT final_score FROM grades LIMIT 1')
+    except sqlite3.OperationalError:
+        cursor.execute('ALTER TABLE grades ADD COLUMN final_score REAL')
+    
     conn.commit()
     conn.close()
-
-# 初始化数据库
-init_db()
-migrate_db()
+    # 初始化数据库
+    init_db()
+    migrate_db()
 
 def get_db_connection():
     """获取数据库连接"""
@@ -684,15 +702,32 @@ def add_grade():
                 student_id = student['student_id']
                 score_key = f'score_{student_id}'
                 score = request.form.get(score_key)
-                
-                # 只有填写了成绩的学生才插入数据库，未填成绩视为未参加考试
-                if score and score.strip():
+
+                attendance_score = request.form.get(f'attendance_score_{student_id}')
+                activity_score = request.form.get(f'activity_score_{student_id}')
+                final_score = request.form.get(f'final_score_{student_id}')
+
+
+                 # 只要填写了任意一项成绩就插入数据库
+                has_any_score = (score and score.strip()) or (attendance_score and attendance_score.strip()) or (activity_score and activity_score.strip()) or (final_score and final_score.strip())
+                if has_any_score:
                     try:
-                        score_float = float(score)
+                        score_float = float(score) if score and score.strip() else None
+                        
+                # 只有填写了成绩的学生才插入数据库，未填成绩视为未参加考试
+                # if score and score.strip():
+                #     try:
+                #         score_float = float(score)
+
+                        # 如果前端没填，默认存入 None
+                        att_float = float(attendance_score) if attendance_score and attendance_score.strip() else None
+                        act_float = float(activity_score) if activity_score and activity_score.strip() else None
+                        fin_float = float(final_score) if final_score and final_score.strip() else None
+
                         conn.execute('''
-                            INSERT INTO grades (student_id, score, semester, exam_date, course_name, created_at, updated_at)
-                            VALUES (?, ?, ?, ?, ?, ?, ?)
-                        ''', (student_id, score_float, semester, exam_date, course_name, now, now))
+                            INSERT INTO grades (student_id, score, semester, exam_date, course_name, attendance_score, activity_score, final_score, created_at, updated_at)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ''', (student_id, score_float, semester, exam_date, course_name, att_float, act_float, fin_float, now, now))
                         success_count += 1
                         added_student_ids.append(student_id)
                     except Exception:
@@ -730,13 +765,17 @@ def edit_grade(id):
     student_id = grade['student_id']
     
     if request.method == 'POST':
-        score = float(request.form['score']) if request.form['score'] else None
+        score = float(request.form.get('score')) if request.form.get('score') else None
         exam_date = request.form['exam_date']
         now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+         # 获取出勤、活动、期末成绩，未填写则存入 None
+        attendance_score = float(request.form['attendance_score']) if request.form.get('attendance_score') else None
+        activity_score = float(request.form['activity_score']) if request.form.get('activity_score') else None
+        final_score = float(request.form['final_score']) if request.form.get('final_score') else None
         
         conn.execute('''
-            UPDATE grades SET score = ?, exam_date = ?, updated_at = ? WHERE id = ?
-        ''', (score, exam_date, now, id))
+            UPDATE grades SET score = ?, attendance_score = ?, activity_score = ?, final_score = ?, exam_date = ?, updated_at = ? WHERE id = ?
+        ''', (score, attendance_score, activity_score, final_score, exam_date, now, id))
         conn.commit()
         conn.close()
         flash('成绩更新成功！', 'success')

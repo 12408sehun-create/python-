@@ -59,7 +59,10 @@
                             <tr>
                                 <th>学号</th>
                                 <th>姓名</th>
-                                <th>成绩 (0-100)</th>
+                                <th>出勤</th>
+                                <th>活动</th>
+                                <th>期末</th>
+                                <th>总分</th>
                             </tr>
                         </thead>
                         <tbody id="studentTableBody">
@@ -166,7 +169,10 @@ function showStudents(className) {
         var tr = document.createElement('tr');
         tr.innerHTML = '<td>' + student.student_id + '</td>' +
                        '<td>' + student.name + '</td>' +
-                       '<td><input type="number" class="form-control" name="score_' + student.student_id + '" min="0" max="100" step="0.1" placeholder="请输入成绩"></td>';
+                       '<td><input type="number" class="form-control" name="attendance_score_' + student.student_id + '" min="0" step="0.1" placeholder="出勤成绩"></td>' +
+                       '<td><input type="number" class="form-control" name="activity_score_' + student.student_id + '" min="0" step="0.1" placeholder="活动成绩"></td>' +
+                       '<td><input type="number" class="form-control" name="final_score_' + student.student_id + '" min="0" step="0.1" placeholder="期末成绩"></td>'+
+                       '<td><input type="number" class="form-control" name="score_' + student.student_id + '" min="0" max="100" step="0.1" placeholder="请输入总成绩"></td>';
         studentTableBody.appendChild(tr);
     });
     
