@@ -253,62 +253,93 @@ def calculate_page_for_student(student_id, search_query, major_filter, class_fil
     conn = get_db_connection()
     
     # 构建查询条件
+    conditions = []
+    params = []
+
     if search_query:
-        query = '''
-            SELECT COUNT(*) as position
-            FROM students 
-            WHERE (name LIKE ? OR student_id LIKE ? OR class_name LIKE ?)
-            AND (major, grade_year, class_name, name) <= (
-                SELECT major, grade_year, class_name, name 
-                FROM students 
-                WHERE id = ?
-            )
-        '''
-        params = (f'%{search_query}%', f'%{search_query}%', f'%{search_query}%', student_id)
-    elif major_filter:
-        query = '''
-            SELECT COUNT(*) as position
-            FROM students 
-            WHERE major = ?
-            AND (grade_year, class_name, name) <= (
-                SELECT grade_year, class_name, name 
-                FROM students 
-                WHERE id = ?
-            )
-        '''
-        params = (major_filter, student_id)
-    elif class_filter:
-        query = '''
-            SELECT COUNT(*) as position
-            FROM students 
-            WHERE class_name = ?
-            AND (major, grade_year, class_name, name) <= (
-                SELECT major, grade_year, class_name, name 
-                FROM students 
-                WHERE id = ?
-            )
-        '''
-        params = (class_filter, student_id)
-    else:
-        query = '''
-            SELECT COUNT(*) as position
-            FROM students 
-            WHERE (major, grade_year, class_name, name) <= (
-                SELECT major, grade_year, class_name, name 
-                FROM students 
-                WHERE id = ?
-            )
-        '''
-        params = (student_id,)
+        conditions.append('(name LIKE ? OR student_id LIKE ? OR class_name LIKE ?)')
+        params.extend([f'%{search_query}%', f'%{search_query}%', f'%{search_query}%'])
+    if major_filter:
+        conditions.append('major = ?')
+        params.append(major_filter)
+    if class_filter:
+        conditions.append('class_name = ?')
+        params.append(class_filter)
+
+    # 核心修复：使用 CAST 转换为数值比较，与 index 路由的排序规则保持绝对一致
+    position_query = 'SELECT COUNT(*) as position FROM students WHERE CAST(student_id AS INTEGER) < CAST(? AS INTEGER)'
+    position_params = [student_id]
+
+    if conditions:
+        position_query += ' AND ' + ' AND '.join(conditions)
+        position_params.extend(params)
     
-    result = conn.execute(query, params).fetchone()
-    position = result['position'] if result else 1
+    result = conn.execute(position_query, position_params).fetchone()
+    position = result['position'] + 1 if result else 1
     
     # 计算页码
     page = (position - 1) // per_page + 1
     
     conn.close()
     return page
+
+
+    # if search_query:
+    #     query = '''
+    #         SELECT COUNT(*) as position
+    #         FROM students 
+    #         WHERE (name LIKE ? OR student_id LIKE ? OR class_name LIKE ?)
+    #         AND (major, grade_year, class_name, name) <= (
+    #             SELECT major, grade_year, class_name, name 
+    #             FROM students 
+    #             WHERE id = ?
+    #         )
+    #     '''
+    #     params = (f'%{search_query}%', f'%{search_query}%', f'%{search_query}%', student_id)
+    # elif major_filter:
+    #     query = '''
+    #         SELECT COUNT(*) as position
+    #         FROM students 
+    #         WHERE major = ?
+    #         AND (grade_year, class_name, name) <= (
+    #             SELECT grade_year, class_name, name 
+    #             FROM students 
+    #             WHERE id = ?
+    #         )
+    #     '''
+    #     params = (major_filter, student_id)
+    # elif class_filter:
+    #     query = '''
+    #         SELECT COUNT(*) as position
+    #         FROM students 
+    #         WHERE class_name = ?
+    #         AND (major, grade_year, class_name, name) <= (
+    #             SELECT major, grade_year, class_name, name 
+    #             FROM students 
+    #             WHERE id = ?
+    #         )
+    #     '''
+    #     params = (class_filter, student_id)
+    # else:
+    #     query = '''
+    #         SELECT COUNT(*) as position
+    #         FROM students 
+    #         WHERE (major, grade_year, class_name, name) <= (
+    #             SELECT major, grade_year, class_name, name 
+    #             FROM students 
+    #             WHERE id = ?
+    #         )
+    #     '''
+    #     params = (student_id,)
+    
+    # result = conn.execute(query, params).fetchone()
+    # position = result['position'] if result else 1
+    
+    # # 计算页码
+    # page = (position - 1) // per_page + 1
+    
+    # conn.close()
+    # return page
 
 # ==================== 学生管理 ====================
 
@@ -358,7 +389,7 @@ def index():
         count_params = ()
     
     # 添加排序
-    base_query += ' ORDER BY updated_at DESC, major, grade_year, class_name, name'
+    base_query += ' ORDER BY CAST(student_id AS INTEGER) ASC'
     
     # 获取总记录数
     total = conn.execute(count_query, count_params).fetchone()[0]
@@ -431,7 +462,7 @@ def add_student():
             session.pop('highlighted_attendance', None)
             
             # 计算学生应该在哪一页
-            page = calculate_page_for_student(student_id_value, '', major, '')
+            page = calculate_page_for_student(student_id, '', '', '')
             
             # 跳转到正确的页面
             return redirect(url_for('index', page=page))
@@ -481,7 +512,7 @@ def edit_student(id):
             session.pop('highlighted_attendance', None)
             
             # 计算学生应该在哪一页
-            page = calculate_page_for_student(id, '', major, '')
+            page = calculate_page_for_student(student_id, '', '', '')
             
             # 跳转到正确的页面
             return redirect(url_for('index', page=page))
@@ -713,7 +744,7 @@ def add_grade():
                 if has_any_score:
                     try:
                         score_float = float(score) if score and score.strip() else None
-                        
+
                 # 只有填写了成绩的学生才插入数据库，未填成绩视为未参加考试
                 # if score and score.strip():
                 #     try:
