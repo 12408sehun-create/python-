@@ -540,13 +540,8 @@ def view_student(id):
     conn = get_db_connection()
     student = conn.execute('SELECT * FROM students WHERE id = ?', (id,)).fetchone()
     
-    # 计算 GPA
-    gpa_result = conn.execute('''
-        SELECT AVG(score) as avg_score FROM grades WHERE student_id = ?
-    ''', (student['student_id'],)).fetchone()
-    
     conn.close()
-    return render_template('view.html', student=student, gpa=gpa_result['avg_score'])
+    return render_template('view.html', student=student)
 
 # ==================== 成绩管理 ====================
 
@@ -676,6 +671,7 @@ def grade_detail(student_id):
     
     conn = get_db_connection()
     highlight_id = request.args.get('highlight_id', type=int)
+    from_view = request.args.get('from_view', '')
     
     # 获取学生信息
     student = conn.execute('SELECT * FROM students WHERE student_id = ?', (student_id,)).fetchone()
@@ -692,10 +688,9 @@ def grade_detail(student_id):
         ORDER BY updated_at DESC
         LIMIT ? OFFSET ?
     ''', (student_id, per_page, offset)).fetchall()
-    
     conn.close()
     return render_template('grade_detail.html', student=student, grades=all_grades, highlight_id=highlight_id,
-                         page=page, total_pages=total_pages, total=total)
+                         page=page, total_pages=total_pages, total=total, from_view=from_view)
 
 @app.route('/grades/add', methods=('GET', 'POST'))
 def add_grade():
@@ -1080,7 +1075,7 @@ def attendance_detail(student_id):
     
     conn = get_db_connection()
     highlight_id = request.args.get('highlight_id', type=int)
-    
+    from_view = request.args.get('from_view', '')
     # 获取学生信息
     student = conn.execute('SELECT * FROM students WHERE student_id = ?', (student_id,)).fetchone()
     
@@ -1137,7 +1132,7 @@ def attendance_detail(student_id):
                          attendance=all_attendance, stats=attendance_stats, total_count=total_count,
                          highlight_id=highlight_id,
                          page=page, total_pages=total_pages, total=total,
-                         start_date=start_date, end_date=end_date)
+                         start_date=start_date, end_date=end_date, from_view = from_view)
 
 # 考勤详情页 - 按状态查看
 @app.route('/attendance/detail/<student_id>/status/<status>')
@@ -1149,7 +1144,6 @@ def attendance_detail_by_status(student_id, status):
     # 获取日期筛选参数
     start_date = request.args.get('start_date', '')
     end_date = request.args.get('end_date', '')
-    
     conn = get_db_connection()
     
     # 获取学生信息

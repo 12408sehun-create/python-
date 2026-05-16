@@ -67,16 +67,6 @@
                         <td>{{ student.address or '-' }}</td>
                     </tr>
                     <tr>
-                        <th class="text-muted">平均分(GPA)</th>
-                        <td>
-                            {% if gpa %}
-                            <span class="badge bg-success">{{ "%.2f"|format(gpa) }}</span>
-                            {% else %}
-                            -
-                            {% endif %}
-                        </td>
-                    </tr>
-                    <tr>
                         <th class="text-muted">创建时间</th>
                         <td>{{ student.created_at }}</td>
                     </tr>
@@ -87,6 +77,19 @@
                 </table>
             </div>
         </div>
+    </div>
+</div>
+
+
+<!-- 快捷跳转 -->
+<div class="card mb-4">
+    <div class="card-body d-flex gap-3">
+        <a href="{{ url_for('grade_detail', student_id=student.student_id, from_view=student.id) }}" class="btn btn-outline-primary">
+            <i class="bi bi-trophy"></i> 查看成绩详情
+        </a>
+        <a href="{{ url_for('attendance_detail', student_id=student.student_id, from_view=student.id) }}" class="btn btn-outline-info">
+            <i class="bi bi-calendar-check"></i> 查看考勤详情
+        </a>
     </div>
 </div>
 
