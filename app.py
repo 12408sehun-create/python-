@@ -1132,7 +1132,7 @@ def attendance_detail(student_id):
                          attendance=all_attendance, stats=attendance_stats, total_count=total_count,
                          highlight_id=highlight_id,
                          page=page, total_pages=total_pages, total=total,
-                         start_date=start_date, end_date=end_date, from_view = from_view)
+                         start_date=start_date, end_date=end_date, from_view=from_view)
 
 # 考勤详情页 - 按状态查看
 @app.route('/attendance/detail/<student_id>/status/<status>')
