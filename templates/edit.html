@@ -50,13 +50,14 @@
                 </div>
                 <div class="col-md-4 mb-3">
                     <label for="grade_year" class="form-label">年级 <span class="text-danger">*</span></label>
-                    <select class="form-select" id="grade_year" name="grade_year" required>
+                        <select class="form-select" id="grade_year" name="grade_year" required>
                         <option value="">请选择</option>
-                        <option value="1" {% if student.grade_year == '1' %}selected{% endif %}>1</option>
-                        <option value="2" {% if student.grade_year == '2' %}selected{% endif %}>2</option>
-                        <option value="3" {% if student.grade_year == '3' %}selected{% endif %}>3</option>
-                        <option value="4" {% if student.grade_year == '4' %}selected{% endif %}>4</option>
+                        <option value="1" {% if student.grade_year|string == '1' %}selected{% endif %}>1</option>
+                        <option value="2" {% if student.grade_year|string == '2' %}selected{% endif %}>2</option>
+                        <option value="3" {% if student.grade_year|string == '3' %}selected{% endif %}>3</option>
+                        <option value="4" {% if student.grade_year|string == '4' %}selected{% endif %}>4</option>
                     </select>
+
                 </div>
             </div>
             
@@ -82,7 +83,7 @@
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="enrollment_date" class="form-label">入学日期 <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control" id="enrollment_date" name="enrollment_date" value="{{ student.enrollment_date or '' }}" required>
+             <input type="date" class="form-control custom-date-input" id="enrollment_date" name="enrollment_date" required>
                 </div>
                 <div class="col-md-6 mb-3">
                     <label for="months_paid" class="form-label">已缴月数 <span class="text-danger">*</span></label>
@@ -182,5 +183,27 @@ document.addEventListener('DOMContentLoaded', function() {
         classSelect.appendChild(unassignedOption);
     }
 });
+
+// 页面加载时，将后端的 YYYY-MM-DD 转换为 YY/MM/DD 展示
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.getElementById('enrollment_date');
+    const rawDate = "{{ student.enrollment_date[:10] if student.enrollment_date else '' }}";
+    
+    // 1. 必须用 YYYY-MM-DD 格式赋值，浏览器才能识别并显示日历
+    if (rawDate && rawDate.includes('-')) {
+        dateInput.value = rawDate;
+    }
+
+    // 2. 表单提交前，将 YY/MM/DD 还原为 YYYY-MM-DD 供后端接收
+    document.querySelector('form').addEventListener('submit', function(e) {
+        if (dateInput.value && dateInput.value.includes('/')) {
+            const parts = dateInput.value.split('/');
+            if (parts.length === 3) {
+                dateInput.value = '20' + parts[0] + '-' + parts[1] + '-' + parts[2];
+            }
+        }
+    });
+});
+
 </script>
 {% endblock %}

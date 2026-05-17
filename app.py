@@ -491,6 +491,8 @@ def edit_student(id):
         email = request.form['email']
         address = request.form['address']
         enrollment_date = request.form.get('enrollment_date', '')
+        # 统一将斜杠替换为短横线，并截取前10位，确保存入数据库的是 YYYY-MM-DD
+        enrollment_date = enrollment_date.replace('/', '-')[:10] if enrollment_date else ''
         months_paid = int(request.form.get('months_paid', 0))
         graduation_status = request.form.get('graduation_status', '在校')
         
@@ -1980,15 +1982,18 @@ def class_edit_student(class_name, student_id):
         phone = request.form['phone']
         email = request.form['email']
         address = request.form['address']
+        grade_year = request.form.get('grade_year')
+        enrollment_date = request.form.get('enrollment_date', '')
         
         now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         
         try:
             conn.execute('''
                 UPDATE students 
-                SET student_id=?, name=?, gender=?, age=?, major=?, class_name=?, grade_year=?, phone=?, email=?, address=?, updated_at=?
+                SET student_id=?, name=?, gender=?, age=?, major=?, class_name=?, grade_year=?, phone=?, email=?, address=?, enrollment_date=?, updated_at=?
                 WHERE id=?
-            ''', (new_student_id, name, gender, age, major, class_name, grade_year, phone, email, address, now, student_id))
+            ''', (new_student_id, name, gender, age, major, class_name, grade_year, phone, email, address, enrollment_date, now, student_id))
+
             conn.commit()
             flash('学生信息更新成功！', 'success')
             
