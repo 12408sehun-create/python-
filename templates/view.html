@@ -71,8 +71,8 @@
                         <td>{{ student.created_at }}</td>
                     </tr>
                     <tr>
-                        <th class="text-muted">更新时间</th>
-                        <td>{{ student.updated_at }}</td>
+                        <th class="text-muted">入学时间</th>
+                        <td>{{ student.enrollment_date if student.enrollment_date else '暂无' }}</td>
                     </tr>
                 </table>
             </div>
