@@ -778,7 +778,7 @@ def add_grade():
     return render_template('grade_add.html', students=students, classes=classes, selected_class=selected_class, all_students=all_students)
 
 
-@app.route('/grades/batch_edit', methods=('POST',))  # 确保只接收POST请求
+@app.route('/grades/batch_edit', methods=('POST',))
 def batch_edit_grades():
     """批量修改成绩"""
     major = request.form.get('major')
@@ -823,23 +823,33 @@ def batch_edit_grades():
             SELECT student_id FROM students WHERE major = ? AND class_name = ?
         )
     '''.format(', '.join(updates))
-    
     params.extend([major, class_name])
     
     try:
         conn.execute(query, tuple(params))
         conn.commit()
+        
+        # 查询受影响的学生ID，用于高亮显示
+        affected_students = conn.execute(
+            'SELECT DISTINCT student_id FROM students WHERE major = ? AND class_name = ?',
+            (major, class_name)
+        ).fetchall()
+        added_student_ids = [s['student_id'] for s in affected_students]
+        
         flash('成绩批量修改成功！', 'success')
+        
+        # 清除之前的高亮状态，只高亮最近修改的成绩
+        if added_student_ids:
+            session['highlighted_grade'] = ','.join(added_student_ids)
+        session.pop('highlighted_class', None)
+        session.pop('highlighted_attendance', None)
+        
     except Exception as e:
         flash(f'批量修改失败：{e}', 'error')
     finally:
         conn.close()
         
-    return redirect(url_for('grades'))
-
-
-
-
+    return redirect(url_for('grades', page=1))
 
 @app.route('/grades/edit/<int:id>', methods=('GET', 'POST'))
 def edit_grade(id):
