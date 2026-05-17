@@ -56,7 +56,7 @@
                 </div>
                 <div class="col-md-6 mb-3">
                     <label for="course_name" class="form-label">课程名称</label>
-                    <input type="text" class="form-control" id="course_name" name="course_name" placeholder="请输入课程名称">
+                    <input type="text" class="form-control" id="course_name" name="course_name">
                 </div>
             </div>
             
@@ -99,6 +99,7 @@
         </form>
     </div>
 </div>
+
 
 <script>
 // 班级数据（从后端获取）
@@ -184,10 +185,10 @@ function showStudents(className) {
         var tr = document.createElement('tr');
         tr.innerHTML = '<td>' + student.student_id + '</td>' +
                        '<td>' + student.name + '</td>' +
-                       '<td><input type="number" class="form-control no-spinner attendance-score" name="attendance_score_' + student.student_id + '" min="0" step="0.1" placeholder="出勤成绩"></td>' +
-                       '<td><input type="number" class="form-control no-spinner activity-score" name="activity_score_' + student.student_id + '" min="0" step="0.1" placeholder="活动成绩"></td>' +
-                       '<td><input type="number" class="form-control no-spinner final-score" name="final_score_' + student.student_id + '" min="0" step="0.1" placeholder="期末成绩"></td>'+
-                       '<td><input type="number" class="form-control no-spinner total-score" name="score_' + student.student_id + '" min="0" step="0.1" placeholder="请输入总成绩"></td>';
+                       '<td><input type="number" class="form-control no-spinner attendance-score" name="attendance_score_' + student.student_id + '" min="0" step="0.1"></td>' +
+                       '<td><input type="number" class="form-control no-spinner activity-score" name="activity_score_' + student.student_id + '" min="0" step="0.1"></td>' +
+                       '<td><input type="number" class="form-control no-spinner final-score" name="final_score_' + student.student_id + '" min="0" step="0.1"></td>'+
+                       '<td><input type="number" class="form-control no-spinner total-score" name="score_' + student.student_id + '" min="0" step="0.1"></td>';
 
         studentTableBody.appendChild(tr);
     });
@@ -214,7 +215,7 @@ document.addEventListener('DOMContentLoaded', function() {
         filteredClasses = allClasses.filter(function(c) { return c.major === major; });
     }
     
-    classSelect.innerHTML = '<option value="">请选择班级</option>';
+    classSelect.innerHTML = '<option value=""></option>';
     filteredClasses.forEach(function(cls) {
         var option = document.createElement('option');
         option.value = cls.name;

@@ -30,7 +30,7 @@
                 </div>
                 <div class="col-md-3">
                     <label for="course_name" class="form-label">课程名称</label>
-                    <input type="text" class="form-control" id="course_name" name="course_name" placeholder="请输入课程名称">
+                    <input type="text" class="form-control" id="course_name" name="course_name">
                 </div>
             </div>
             
@@ -162,7 +162,7 @@ function showStudents(className) {
                        '<option value="迟到">迟到</option>' +
                        '<option value="请假">请假</option>' +
                        '</select></td>' +
-                       '<td><input type="text" class="form-control form-control-sm" name="remarks_' + student.student_id + '" placeholder="备注"></td>';
+                       '<td><input type="text" class="form-control form-control-sm" name="remarks_' + student.student_id + '" placeholder=""></td>';
         studentTableBody.appendChild(tr);
     });
     
