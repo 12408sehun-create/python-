@@ -3,6 +3,19 @@
 {% block title %}编辑成绩 - 大学生管理系统{% endblock %}
 
 {% block content %}
+
+<style>
+    /* 隐藏数字输入框的上下箭头 */
+    .no-spinner::-webkit-inner-spin-button,
+    .no-spinner::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    .no-spinner {
+        -moz-appearance: textfield; /* 兼容 Firefox */
+    }
+</style>
+
 <div class="card">
     <div class="card-body">
         <h4 class="mb-4"><i class="bi bi-pencil"></i> 编辑成绩</h4>
@@ -22,23 +35,23 @@
             <div class="row">
                 <div class="col-md-4 mb-3">
                     <label for="attendance_score" class="form-label">出勤</label>
-                    <input type="number" class="form-control" id="attendance_score" name="attendance_score" value="{{ grade.attendance_score if grade.attendance_score is not none else '' }}" min="0" max="100" step="0.1">
+                    <input type="number" class="form-control no-spinner" id="attendance_score" name="attendance_score" value="{{ grade.attendance_score if grade.attendance_score is not none else '' }}" min="0" max="100" step="0.1">
             </div>
                 <div class="col-md-4 mb-3">
                     <label for="activity_score" class="form-label">活动</label>
-                    <input type="number" class="form-control" id="activity_score" name="activity_score" 
+                    <input type="number" class="form-control no-spinner" id="activity_score" name="activity_score" 
                value="{{ grade.activity_score if grade.activity_score is not none else '' }}" min="0" max="100" step="0.1">
             </div>
                 <div class="col-md-4 mb-3">
                     <label for="final_score" class="form-label">期末</label>
-                    <input type="number" class="form-control" id="final_score" name="final_score" 
+                    <input type="number" class="form-control no-spinner" id="final_score" name="final_score" 
                value="{{ grade.final_score if grade.final_score is not none else '' }}" min="0" max="100" step="0.1">
             </div>
             
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="score" class="form-label">总分</label>
-                    <input type="number" class="form-control" id="score" name="score" value="{{ grade.score if grade.score else '' }}" min="0" max="100" step="0.1">
+                    <input type="number" class="form-control no-spinner" id="score" name="score" value="{{ grade.score if grade.score else '' }}" min="0" max="100" step="0.1">
                 </div>
             </div>
 

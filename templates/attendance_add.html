@@ -135,7 +135,8 @@ function showStudents(className) {
     }
     
     // 筛选该班级的学生
-    var students = allStudents.filter(function(s) { return s.class_name === className; });
+    var students = allStudents.filter(function(s) { return s.class_name === className; }).sort(function(a, b) { return parseInt(a.student_id) - parseInt(b.student_id); });
+
     
     if (students.length === 0) {
         studentListSection.style.display = 'none';
