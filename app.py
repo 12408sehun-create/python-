@@ -777,6 +777,70 @@ def add_grade():
     conn.close()
     return render_template('grade_add.html', students=students, classes=classes, selected_class=selected_class, all_students=all_students)
 
+
+@app.route('/grades/batch_edit', methods=('POST',))  # 确保只接收POST请求
+def batch_edit_grades():
+    """批量修改成绩"""
+    major = request.form.get('major')
+    class_name = request.form.get('class_name')
+    semester = request.form.get('semester', '').strip()
+    exam_date = request.form.get('exam_date', '').strip()
+    course_name = request.form.get('course_name', '').strip()
+    
+    if not major or not class_name:
+        flash('必须选择专业和班级进行筛选！', 'error')
+        return redirect(url_for('grades'))
+        
+    conn = get_db_connection()
+    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    
+    # 动态构建UPDATE语句
+    updates = []
+    params = []
+    if semester:
+        updates.append("semester = ?")
+        params.append(semester)
+    if exam_date:
+        updates.append("exam_date = ?")
+        params.append(exam_date)
+    if course_name:
+        updates.append("course_name = ?")
+        params.append(course_name)
+        
+    if not updates:
+        conn.close()
+        flash('未填写任何需要修改的内容！', 'error')
+        return redirect(url_for('grades'))
+        
+    updates.append("updated_at = ?")
+    params.append(now)
+    
+    # 通过子查询关联学生表匹配专业和班级
+    query = '''
+        UPDATE grades 
+        SET {} 
+        WHERE student_id IN (
+            SELECT student_id FROM students WHERE major = ? AND class_name = ?
+        )
+    '''.format(', '.join(updates))
+    
+    params.extend([major, class_name])
+    
+    try:
+        conn.execute(query, tuple(params))
+        conn.commit()
+        flash('成绩批量修改成功！', 'success')
+    except Exception as e:
+        flash(f'批量修改失败：{e}', 'error')
+    finally:
+        conn.close()
+        
+    return redirect(url_for('grades'))
+
+
+
+
+
 @app.route('/grades/edit/<int:id>', methods=('GET', 'POST'))
 def edit_grade(id):
     """编辑成绩"""
@@ -793,6 +857,7 @@ def edit_grade(id):
     if request.method == 'POST':
         score = float(request.form.get('score')) if request.form.get('score') else None
         exam_date = request.form['exam_date']
+        semester = request.form.get('semester', '').strip()
         now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
          # 获取出勤、活动、期末成绩，未填写则存入 None
         attendance_score = float(request.form['attendance_score']) if request.form.get('attendance_score') else None
@@ -800,8 +865,8 @@ def edit_grade(id):
         final_score = float(request.form['final_score']) if request.form.get('final_score') else None
         
         conn.execute('''
-            UPDATE grades SET score = ?, attendance_score = ?, activity_score = ?, final_score = ?, exam_date = ?, updated_at = ? WHERE id = ?
-        ''', (score, attendance_score, activity_score, final_score, exam_date, now, id))
+            UPDATE grades SET score = ?, attendance_score = ?, activity_score = ?, final_score = ?, semester = ?, exam_date = ?, updated_at = ? WHERE id = ?
+        ''', (score, attendance_score, activity_score, final_score, semester, exam_date, now, id))
         conn.commit()
         conn.close()
         flash('成绩更新成功！', 'success')

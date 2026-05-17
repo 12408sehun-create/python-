@@ -7,9 +7,15 @@
     <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h4><i class="bi bi-graph-up"></i> 成绩管理</h4>
-            <a href="{{ url_for('add_grade') }}" class="btn btn-primary">
-                <i class="bi bi-plus-circle"></i> 添加成绩
-            </a>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('add_grade') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> 添加成绩
+                </a>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#batchEditModal">
+                    <i class="bi bi-pencil-square me-1"></i> 批量修改
+                </button>
+            </div>
+        </div>
         </div>
         
         <!-- 筛选 -->
@@ -38,10 +44,10 @@
             <div class="col-md-2">
                 <select name="semester" class="form-select">
                     <option value="">全部学期</option>
-                    <option value="2024-2025-1" {% if semester_filter == '2024-2025-1' %}selected{% endif %}>2024-2025-1</option>
-                    <option value="2024-2025-2" {% if semester_filter == '2024-2025-2' %}selected{% endif %}>2024-2025-2</option>
-                    <option value="2023-2024-1" {% if semester_filter == '2023-2024-1' %}selected{% endif %}>2023-2024-1</option>
-                    <option value="2023-2024-2" {% if semester_filter == '2023-2024-2' %}selected{% endif %}>2023-2024-2</option>
+                    <option value="2025-2026-1" {% if semester_filter == '2025-2026-1' %}selected{% endif %}>2025-2026-1</option>
+                    <option value="2025-2026-2" {% if semester_filter == '2025-2026-2' %}selected{% endif %}>2025-2026-2</option>
+                    <option value="2024-2025-1" {% if semester_filter == '2026-2027-1' %}selected{% endif %}>2026-2027-1</option>
+                    <option value="2024-2025-2" {% if semester_filter == '2026-2027-2' %}selected{% endif %}>2026-2027-2</option>
                 </select>
             </div>
             <div class="col-md-2">
@@ -143,4 +149,96 @@
         {% endif %}
     </div>
 </div>
+
+<!-- 批量修改弹框 -->
+<div class="modal fade" id="batchEditModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form action="{{ url_for('batch_edit_grades') }}" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title">批量修改成绩</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">专业</label>
+                            <select class="form-select" id="batch_major" required>
+                                <option value="">请选择专业</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">班级</label>
+                            <select class="form-select" id="batch_class" name="class_name" required>
+                                <option value="">请先选择专业</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- 隐藏域传递专业值给后端 -->
+                    <input type="hidden" name="major" id="batch_major_input">
+                    <div class="mb-3">
+                        <label class="form-label">课程名称</label>
+                        <input type="text" class="form-control" name="course_name">
+                    </div>
+                                        <div class="mb-3">
+                        <label class="form-label">学期</label>
+                        <select class="form-select" name="semester">
+                            <option value="">请选择学期</option>
+                            <option value="2025-2026-1">2025-2026-1</option>
+                            <option value="2025-2026-2">2025-2026-2</option>
+                            <option value="2026-2027-1">2026-2027-1</option>
+                            <option value="2026-2027-2">2026-2027-2</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">考试日期</label>
+                        <input type="date" class="form-control" name="exam_date">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">确认修改</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var batchMajor = document.getElementById('batch_major');
+    var batchClass = document.getElementById('batch_class');
+    var batchMajorInput = document.getElementById('batch_major_input');
+
+    // 1. 从后端API加载专业和班级数据
+    fetch('/api/majors').then(r => r.json()).then(data => {
+        for(var major in data.majors) {
+            var opt = document.createElement('option');
+            opt.value = major; 
+            opt.text = major;
+            batchMajor.appendChild(opt);
+        }
+    });
+
+    // 2. 专业班级联动筛选
+    batchMajor.addEventListener('change', function() {
+        batchMajorInput.value = this.value; // 同步专业值到隐藏域
+        batchClass.innerHTML = '<option value="">请选择班级</option>';
+        if(this.value) {
+            fetch('/api/majors').then(r => r.json()).then(data => {
+                var classes = data.majors[this.value] || [];
+                classes.forEach(function(cls) {
+                    var opt = document.createElement('option');
+                    opt.value = cls; 
+                    opt.text = cls;
+                    batchClass.appendChild(opt);
+                });
+            });
+        }
+    });
+});
+</script>
+
+
 {% endblock %}
