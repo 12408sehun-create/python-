@@ -184,10 +184,11 @@ function showStudents(className) {
         var tr = document.createElement('tr');
         tr.innerHTML = '<td>' + student.student_id + '</td>' +
                        '<td>' + student.name + '</td>' +
-                       '<td><input type="number" class="form-control no-spinner" name="attendance_score_' + student.student_id + '" min="0" step="0.1" placeholder="出勤成绩"></td>' +
-                       '<td><input type="number" class="form-control no-spinner" name="activity_score_' + student.student_id + '" min="0" step="0.1" placeholder="活动成绩"></td>' +
-                       '<td><input type="number" class="form-control no-spinner" name="final_score_' + student.student_id + '" min="0" step="0.1" placeholder="期末成绩"></td>'+
-                       '<td><input type="number" class="form-control no-spinner" name="score_' + student.student_id + '" min="0" step="0.1" placeholder="请输入总成绩"></td>';
+                       '<td><input type="number" class="form-control no-spinner attendance-score" name="attendance_score_' + student.student_id + '" min="0" step="0.1" placeholder="出勤成绩"></td>' +
+                       '<td><input type="number" class="form-control no-spinner activity-score" name="activity_score_' + student.student_id + '" min="0" step="0.1" placeholder="活动成绩"></td>' +
+                       '<td><input type="number" class="form-control no-spinner final-score" name="final_score_' + student.student_id + '" min="0" step="0.1" placeholder="期末成绩"></td>'+
+                       '<td><input type="number" class="form-control no-spinner total-score" name="score_' + student.student_id + '" min="0" step="0.1" placeholder="请输入总成绩"></td>';
+
         studentTableBody.appendChild(tr);
     });
     
@@ -221,5 +222,37 @@ document.addEventListener('DOMContentLoaded', function() {
         classSelect.appendChild(option);
     });
 });
+
+// 监听成绩输入，自动计算总分
+document.getElementById('studentTableBody').addEventListener('input', function(e) {
+    if (e.target.classList.contains('attendance-score') || 
+        e.target.classList.contains('activity-score') || 
+        e.target.classList.contains('final-score')) {
+        
+        var row = e.target.closest('tr');
+        if (!row) return;
+        
+        var attInput = row.querySelector('.attendance-score');
+        var actInput = row.querySelector('.activity-score');
+        var finInput = row.querySelector('.final-score');
+        var totalInput = row.querySelector('.total-score');
+        
+        if (!attInput || !actInput || !finInput || !totalInput) return;
+        
+        var att = attInput.value.trim();
+        var act = actInput.value.trim();
+        var fin = finInput.value.trim();
+        
+        // 只要三个分数框都有值就自动计算总数
+        if (att !== '' && act !== '' && fin !== '') {
+            var sum = parseFloat(att) + parseFloat(act) + parseFloat(fin);
+            totalInput.value = isNaN(sum) ? '' : sum;
+        }
+    }
+});
+
+// 页面加载时初始化班级列表
+
+
 </script>
 {% endblock %}

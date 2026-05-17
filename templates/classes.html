@@ -75,7 +75,7 @@
                                     <td><span class="badge bg-primary">{{ cls.student_count or 0 }}</span></td>
                                     <td onclick="event.stopPropagation();">
                                         <div class="btn-group btn-group-sm" role="group">
-                                            <button type="button" class="btn btn-outline-success me-2" onclick="graduateClass('{{ cls.class_name }}')" title="设置为毕业状态">
+                                            <button type="button" class="btn btn-outline-success me-2" onclick="graduateClass('{{ cls.class_name }}')" title="设置为毕业状态" style="display: none;">
                                                 <i class="bi bi-mortarboard"></i>
                                             </button>
                                             <button type="button" class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#editClassModal" onclick="loadClassData({{ cls.id }}, '{{ cls.class_name }}', '{{ cls.major or '' }}', '{{ cls.grade_year or '' }}')">
