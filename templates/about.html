@@ -418,7 +418,7 @@
                         </h3>
                         {% if news_list %}
                         {% for news in news_list %}
-                        <a href="{{ url_for('news_detail', index=loop.index0) }}" class="news-item {% if just_edited_news == news.id %}table-warning{% endif %}" style="display: flex; align-items: flex-start; gap: 15px; padding: 15px; border-bottom: 1px solid #eee; text-decoration: none; color: inherit; {% if just_edited_news == news.id %}background-color: #fff3cd !important;{% endif %}">
+                    <a href="{{ url_for('news_detail', index=loop.index0) }}" class="news-item {% if just_edited_news == news.id %}table-warning news-edited{% else %}news-normal{% endif %}" style="display: flex; align-items: flex-start; gap: 15px; padding: 15px; border-bottom: 1px solid #eee; text-decoration: none; color: inherit;">
                             <div style="flex: 1; min-width: 0;">
                                 <strong style="font-size: 16px; color: #1a3a5c; display: block; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">
                                     {% if just_edited_news == news.id %}<i class="bi bi-star-fill text-warning me-1"></i>{% endif %}
