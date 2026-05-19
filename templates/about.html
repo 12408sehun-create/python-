@@ -303,6 +303,17 @@
                         <i class="bi bi-newspaper"></i> 新闻通知
                     </a>
                 </li>
+              <!-- 将语言切换粘贴到这里 -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
+                        <i class="bi bi-translate"></i> 语言
+                    </a>
+             <ul class="dropdown-menu">
+                <li><a class="dropdown-item no-translate" href="#" onclick="changeLang('zh')">CH (中文)</a></li>
+                <li><a class="dropdown-item no-translate" href="#" onclick="changeLang('en')">EN (English)</a></li>
+                <li><a class="dropdown-item no-translate" href="#" onclick="changeLang('lo')">LO (老挝语)</a></li>
+            </ul>
+                </li>
             </ul>
         </div>
     </div>
@@ -481,14 +492,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-
-
-<!-- 语言按钮 -->
-<div style="position:fixed;top:15px;right:20px;z-index:9999;display:flex;gap:8px;">
-  <button onclick="changeLang('zh')" class="btn btn-sm btn-primary no-translate">CH</button>
-  <button onclick="changeLang('en')" class="btn btn-sm btn-primary no-translate">EN</button>
-  <button onclick="changeLang('lo')" class="btn btn-sm btn-primary no-translate">LO</button>
-</div>
 
 <script src="/static/translate-global.js"></script>
 

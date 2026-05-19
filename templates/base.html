@@ -85,6 +85,13 @@
             border-bottom: 3px solid #1a3a5c;
             margin-bottom: 25px;
         }
+   
+        .goog-te-banner-frame {
+            display: none !important;
+        }
+        body {
+        top: 0 !important;
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -210,8 +217,8 @@
                 {% endif %}
             </div>
             
-            <!-- 主内容区 -->
-            <div class="col-md-10 p-4">
+                        <!-- 主内容区 -->
+             <div class="col-md-10 p-4">
                 {% block content %}{% endblock %}
             </div>
         </div>
