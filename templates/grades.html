@@ -92,14 +92,14 @@
                             <td>{{ grade.score if grade.score else '-' }}</td>
 
                             <!-- 新增以下等级计算列 -->
-                            <td>{% if grade.score is not none and grade.score != '' %}
+                            <td translate="no">{% if grade.score is not none and grade.score != '' %}
                             {% if grade.score >= 90 %}A
                             {% elif grade.score >= 71 %}B+
                             {% elif grade.score >= 65 %}B
                             {% elif grade.score >= 60 %}C
                             {% elif grade.score >= 55 %}D+
                             {% elif grade.score >= 50 %}D
-                            {% else %}<span class="text-danger">F</span>
+                            {% else %}<span class="text-danger" translate="no">F</span>
         {% endif %}
     {% else %}-
     {% endif %}</td>
