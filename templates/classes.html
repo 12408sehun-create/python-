@@ -81,9 +81,11 @@
                                             <button type="button" class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#editClassModal" onclick="loadClassData({{ cls.id }}, '{{ cls.class_name }}', '{{ cls.major or '' }}', '{{ cls.grade_year or '' }}')">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
-                                            <button type="button" class="btn btn-outline-danger" onclick="deleteClass({{ cls.id }}, '{{ cls.class_name }}')">
+                                            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteClassModal"
+                                                    data-id="{{ cls.id }}" data-name="{{ cls.class_name }}">
                                                 <i class="bi bi-trash"></i>
-                                            </button>
+                                        </button>
+
                                         </div>
                                     </td>
                                 </tr>
@@ -236,6 +238,31 @@
     </div>
 </div>
 
+<!-- 删除班级确认 Modal -->
+<div class="modal fade" id="deleteClassModal" tabindex="-1" aria-labelledby="deleteClassModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteClassModalLabel">删除班级</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+      <div class="modal-body">
+        确定要删除班级 <strong id="deleteClassName"></strong> 吗？<br>
+        <span class="text-danger">此操作不可撤销，班级内的学生将变为未分班状态！</span>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+        <form id="deleteClassForm" method="POST" action="{{ url_for('delete_class') }}" style="display: inline;">
+          <input type="hidden" name="id" id="deleteClassId">
+          <button type="submit" class="btn btn-danger">确认删除</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <!-- 编辑班级弹框 -->
 <div class="modal fade" id="editClassModal" tabindex="-1" aria-labelledby="editClassModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -290,24 +317,18 @@ function loadClassData(id, className, major, gradeYear) {
     document.getElementById('edit_grade_year').value = gradeYear;
 }
 
-// 删除班级
-function deleteClass(id, className) {
-    if (confirm('确定要删除班级 "' + className + '" 吗？\n\n注意：删除班级不会删除该班级的学生，但学生的班级信息将变为空。')) {
-        // 创建隐藏表单提交删除请求
-        const form = document.createElement('form');
-        form.method = 'post';
-        form.action = '{{ url_for("delete_class") }}';
-        
-        const csrfToken = document.createElement('input');
-        csrfToken.type = 'hidden';
-        csrfToken.name = 'id';
-        csrfToken.value = id;
-        form.appendChild(csrfToken);
-        
-        document.body.appendChild(form);
-        form.submit();
-    }
-}
+// 删除班级 Modal 数据注入
+var deleteClassModal = document.getElementById('deleteClassModal');
+deleteClassModal.addEventListener('show.bs.modal', function (event) {
+    var button = event.relatedTarget; // 触发弹窗的按钮
+    var classId = button.getAttribute('data-id');
+    var className = button.getAttribute('data-name');
+    
+    // 将数据填入 Modal 的表单和提示文本中
+    document.getElementById('deleteClassId').value = classId;
+    document.getElementById('deleteClassName').textContent = className;
+});
+
 
 // 设置班级为毕业状态
 function graduateClass(className) {
